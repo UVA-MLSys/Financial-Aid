@@ -62,6 +62,7 @@ df = pd.read_csv(f'{data_root}/Merged.csv')
 # Initialize the app
 external_stylesheets = [dbc.themes.CERULEAN]
 app = Dash(__name__, external_stylesheets=external_stylesheets)
+server = app.server
 
 # remove ' Undergraduate' from ACADEMIC_PROGRAM_DESC
 for value in [' Undergraduate', ' Undergrad']:
@@ -208,7 +209,7 @@ def filter_disbursement(
     logger.info('Done\n')
     return dis
 
-def merge(left:pd.DataFrame, right:pd.DataFrame, key:list|str=None, how='inner'):
+def merge(left:pd.DataFrame, right:pd.DataFrame, key=None, how='inner'):
     common = set(left.columns) & set(right.columns)
     
     # if no key is provided, assume the common columns that 
@@ -506,7 +507,7 @@ def update_data(
     
 # Run the app
 if __name__ == '__main__':
-    app.run(
-        host="127.0.0.1", port=8050,
+    app.run_server(
+        host="0.0.0.0", port=8050,
         debug=True
     )
