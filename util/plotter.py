@@ -58,7 +58,7 @@ def draw_party_fig(years, data, annotate):
 def get_layout(factors, factor_labels, summed):
     return html.Div([
         html.H3(
-            'Financial Aid Analysis (Undergrad)', 
+            'Financial Aid Analysis', 
             style={'textAlign':'center', 'textColor':'blue', 'fontWeight':'bold'}
         ),
         dbc.Row([

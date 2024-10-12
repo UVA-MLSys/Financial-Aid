@@ -1,4 +1,5 @@
 dash
+dash_auth
 dash_bootstrap_components
 gunicorn
 matplotlib

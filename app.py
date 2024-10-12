@@ -4,10 +4,11 @@
 # Import packages
 import pandas as pd
 import dash_bootstrap_components as dbc
+import dash_auth
 from util.utils import *
 from util.plotter import *
 from config import *
-import argparse
+import argparse, json
 import warnings, logging
 warnings.filterwarnings('ignore')
 
@@ -22,9 +23,14 @@ logger.info('Started')
 df = pd.read_csv(data_root + 'Merged.csv')
 
 # Initialize the app
+VALID_USERNAME_PASSWORD_PAIRS = json.load(open(data_root + 'login.json'))
 external_stylesheets = [dbc.themes.BOOTSTRAP]
 app = Dash(__name__, external_stylesheets=external_stylesheets, description='Financial Aid')
 server = app.server
+auth = dash_auth.BasicAuth(
+    app,
+    VALID_USERNAME_PASSWORD_PAIRS
+)
 
 # remove ' Undergraduate' from ACADEMIC_PROGRAM_DESC
 for value in [' Undergraduate', ' Undergrad']:
