@@ -7,6 +7,7 @@ import dash_bootstrap_components as dbc
 from util.utils import *
 from util.plotter import *
 from config import *
+import argparse
 import warnings, logging
 warnings.filterwarnings('ignore')
 
@@ -123,4 +124,15 @@ def update_data(
     
 # Run the app
 if __name__ == '__main__':
-    app.run(host=host, port=port, debug=True)
+    parser = argparse.ArgumentParser(
+        description='Financial Aid Forecasting App', 
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument(
+        '--host', type=str, default='127.0.0.1', 
+        help='Host address. Should be 0.0.0.0 if running on AWS, 127.0.0.1 if running locally.'
+    )
+    parser.add_argument('--port', type=int, default=8050)
+    args = parser.parse_args()
+    
+    app.run(host=args.host, port=args.port, debug=True)

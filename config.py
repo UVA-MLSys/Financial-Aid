@@ -27,8 +27,8 @@ pred_color = next(prop_cycle)["color"]
 
 # should be 127.0.0.1 for debugging using local browser
 # should be 0.0.0.0 for production
-host = '127.0.0.1' # '0.0.0.0'
-port = 8050
+# host = '127.0.0.1' # '0.0.0.0'
+# port = 8050
 data_root = 'datawarehouse/'
 
 time_column = 'AID_YEAR'
