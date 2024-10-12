@@ -2,21 +2,15 @@
 # https://dash.plotly.com/basic-callbacks
 
 # Import packages
-from dash import Dash, html, dash_table, dcc, callback, Output, Input
 import pandas as pd
 import dash_bootstrap_components as dbc
-import plotly.graph_objects as go
-
-import numpy as np
-import matplotlib.pyplot as plt
 from utils import *
+from util.plotter import *
 from config import *
 import warnings, logging
-from numerize.numerize import numerize
 warnings.filterwarnings('ignore')
 
 logger = logging.getLogger(__name__)
-
 logging.basicConfig(
     filename=data_root + 'myapp.log', 
     level=logging.INFO
@@ -27,8 +21,8 @@ logger.info('Started')
 df = pd.read_csv(data_root + 'Merged.csv')
 
 # Initialize the app
-external_stylesheets = [dbc.themes.CERULEAN]
-app = Dash(__name__, external_stylesheets=external_stylesheets)
+external_stylesheets = [dbc.themes.BOOTSTRAP]
+app = Dash(__name__, external_stylesheets=external_stylesheets, description='Financial Aid')
 server = app.server
 
 # remove ' Undergraduate' from ACADEMIC_PROGRAM_DESC
@@ -65,27 +59,23 @@ app.layout = get_layout(
     factors=[
         program_ids, academic_levels, academic_plans, 
         report_categories, report_codes, need_based, residency
-    ],
-    factor_labels=[
+    ], factor_labels=[
         'program-desc', 'academic-level', 'academic-plan', 
         'report-category', 'report-code', 'need-based', 'residency'
-    ],
-    summed=summed
+    ], summed=summed
 )
 
-@app.callback(
+callbacks = [
     Output("time-series-chart", "figure"), 
     Output("count-chart", "figure"), 
-    Output('table', 'data'),
-    Input("dropdown-academic-level", "value"),
-    Input("dropdown-program-desc", "value"),
-    Input("dropdown-academic-plan", "value"),
-    Input("dropdown-report-category", "value"),
-    Input("dropdown-report-code", "value"),
-    Input("dropdown-need-based", "value"),
-    Input("dropdown-residency", "value"),
-    Input('radio-time-series', 'value'),
-    Input('radio-count-series', 'value')
+    Output('table', 'data')
+] + [Input(f"dropdown-{value}", "value") for value in [
+        'academic-level', 'program-desc', 'academic-plan', 
+        'report-category', 'report-code', 'need-based', 'residency']
+] + [Input('radio-time-series', 'value'), Input('radio-count-series', 'value')]
+
+@app.callback(
+    callbacks
 )
 def update_data(
     level, program_desc, academic_plan, 
@@ -110,8 +100,7 @@ def update_data(
     party_fig = draw_party_fig(years, count_df, radio_count)
     
     predictions = {
-        'PREDICTED_MEAN': [],
-        time_column:[],
+        'PREDICTED_MEAN': [], time_column:[],
         f'{confidence}% CI - LOWER':[], 
         f'{confidence}% CI - UPPER':[]
     }
@@ -137,6 +126,4 @@ def update_data(
     
 # Run the app
 if __name__ == '__main__':
-    app.run(
-        host=host, port=port, debug=True
-    )
+    app.run(host=host, port=port, debug=True)

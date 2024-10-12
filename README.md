@@ -25,6 +25,7 @@ wget --no-check-certificate 'https://docs.google.com/uc?export=download&id=1SRGA
 ```
 
 sudo apt install python3.12
+
 ### Environment
 
 Install the required libraries using the following command
