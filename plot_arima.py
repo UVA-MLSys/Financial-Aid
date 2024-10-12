@@ -11,12 +11,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from utils import *
 from config import *
-import warnings
+import warnings, logging
 from numerize.numerize import numerize
 warnings.filterwarnings('ignore')
 
-# logging helps find errors
-import logging
 logger = logging.getLogger(__name__)
 
 logging.basicConfig(
@@ -55,8 +53,6 @@ residency = get_categories(df, 'FIN_AID_FED_RES', default_values['FIN_AID_FED_RE
 academic_levels = [default_values['ACADEMIC_LEVEL_TERM_START']] + [
     'Level One', 'Level Two', 'Level Three', 'Level Four'
 ]
-    
-table_df = df.copy()
 
 summed = pd.DataFrame(columns=[
    'AID_YEAR', 'OFFER_BALANCE','PREDICTED_MEAN',
@@ -65,207 +61,17 @@ summed = pd.DataFrame(columns=[
     'FUNDED_PARTY', 'TOTAL_PARTY'
 ])
 
-app.layout = html.Div([
-    html.H3('Financial Aid Analysis (Undergrad)'),
-    dbc.Row([
-        dbc.Col([
-            # html.H3("Program:"),
-            dcc.Dropdown(
-                id=f"dropdown-{column}",
-                options = values,
-                value=values[0],
-                clearable=True,
-                searchable=True,persistence=True,
-                persistence_type='local'
-            ),
-        ])
-        
-        for column, values in zip(
-            ('program-desc', 'academic-level', 'academic-plan', 'report-category', 'report-code', 'need-based', 'residency'),
-            (program_ids, academic_levels, academic_plans, report_categories, report_codes, need_based, residency)
-        )
-    ], style={'margin':'auto', 'padding':'5px'}),
-    
-    dbc.Row([
-        dbc.Col([
-            dcc.Graph(id="time-series-chart"), 
-            dcc.RadioItems(
-                options=['Annotation On', 'Annotation Off'], 
-                value='Annotation On', id='radio-time-series', 
-                inline=True, 
-                # https://stackoverflow.com/questions/75692815/increase-space-between-text-and-icon-in-dash-checklist
-                labelStyle= {"margin":"1rem"} 
-            ),
-            ], width=7),
-        dbc.Col([
-            dcc.Graph(id="count-chart"),
-            dcc.RadioItems(
-                options=['Annotation On', 'Annotation Off'], 
-                value='Annotation On', id='radio-count-series', 
-                inline=True, labelStyle= {"margin":"1rem"} #,style = {'display': 'flex'}
-            )
-            ], width=5)
-        ]
-    ),
-    dbc.Row(
-        dbc.Col([
-            html.H3("Financial Aid Table:"),
-            # https://dash.plotly.com/datatable/style#styling-editable-columns
-            dash_table.DataTable(
-                id='table', columns=[{'id':c, 'name':c} for c in summed.columns],
-                data=summed.to_dict('records'), page_size=10, 
-                style_header={
-                    'backgroundColor': 'rgb(210, 210, 210)',
-                    'fontWeight': 'bold'
-                },
-            )
-        ]), style={'width': '75vw', 'margin':'auto'}    
-    )
-], style={'width': '95vw', 'margin':'auto', 'text-align': 'center'})
-
-def draw_party_fig(years, data, annotate):
-    party_fig = go.Figure()
-    
-    for (name, column) in [('Funded', 'FUNDED_PARTY'), ('All', 'TOTAL_PARTY')]:
-        if annotate == 'Annotation On':
-            party_fig.add_trace(go.Scatter(
-                name=name,
-                mode="markers+lines+text", 
-                x=years, y=data[column],
-                text=data[column].apply(numerize, args=(1, )),
-                # texttemplate = "%{y}", # "(%{x:.4g}, %{y:.4g})",
-                textposition=improve_text_position(years), # 'bottom center',
-                marker_symbol="circle", 
-                line_color=obs_color,
-                line=dict(width=line_width)
-            ))
-        else:
-            party_fig.add_trace(go.Scatter(
-                name=name,
-                mode="markers+lines", 
-                x=years, y=data[column],
-                marker_symbol="circle", 
-                line_color=obs_color,
-                line=dict(width=line_width)
-            ))
-
-    party_fig.update_layout(
-        font=dict(
-            # family="Courier New",
-            size=fontsize,  # Set the font size here
-        ),
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="center",
-            x=0.5
-        ),
-        title='Students per aid year',
-        xaxis_title='Aid year',
-        yaxis_title='Count',
-        # hovermode='closest' # # Update the layout to show the coordinates
-    )
-    party_fig.update_xaxes(showgrid=True, ticklabelmode="period")
-    party_fig.update_traces(marker_size=marker_size)
-    # party_fig.update_yaxes(range=[0, None])
-    
-    return party_fig
-
-def draw_main_fig(summed, predictions, annotate):
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        name="Ground Truth",
-        mode="markers+text+lines", # markers+text+lines
-        x=summed[time_column], y=summed[target],
-        # text=summed[target].apply(numerize, args=(1, )),
-        # texttemplate = "%{y}", # "(%{x:.4g}, %{y:.4g})",
-        # textposition= improve_text_position(years),# 'bottom center',
-        marker_symbol="circle", 
-        line_color=obs_color,
-        line=dict(width=line_width)
-    ))
-
-    fig.add_trace(go.Scatter(
-        name="Prediction",
-        mode="markers+lines+text", 
-        x=predictions[time_column], 
-        y=predictions['PREDICTED_MEAN'],
-        # text=predictions['PREDICTED_MEAN'].apply(numerize),
-        # texttemplate = "%{y:.3g}", 
-        # textposition= 'bottom center',
-        line=dict(width=line_width),
-        line_color=pred_color
-    ))
-    
-    if annotate == 'Annotation On':
-        # https://plotly.com/python/text-and-annotations/
-        for (x, y) in zip(summed[time_column], summed[target].values):
-            fig.add_annotation(
-                x=x, y=y, xref="x",
-                yref="y", text=numerize(y, 1),
-                showarrow=True, arrowhead=1, 
-                arrowsize=2,arrowwidth=1,
-            )
-            
-        for (x, y) in zip(
-            predictions[time_column], 
-            predictions['PREDICTED_MEAN'].values
-        ):
-            fig.add_annotation(
-                x=x, y=y, xref="x",
-                yref="y", text=numerize(y, 1),
-                showarrow=True,yanchor='bottom',
-                arrowhead=1, arrowsize=2,arrowwidth=1,
-                ax=20,ay=40
-            )
-    
-    # https://plotly.com/python/filled-area-plots/#filled-area-plot-in-dash
-    fig.add_trace(
-        go.Scatter(
-            name=f'{confidence}% CI - LOWER',
-            x=predictions[time_column], 
-            y=predictions[f'{confidence}% CI - LOWER'], line=dict(width=1),
-            line_color=pred_color, 
-            opacity=0.1, mode="lines",
-        )
-    )
-    
-    fig.add_trace(
-        go.Scatter(
-            name=f'{confidence}% CI - UPPER',
-            x=predictions[time_column], 
-            y=predictions[f'{confidence}% CI - UPPER'],
-            fill='tonexty', line=dict(width=1), # fillcolor='#ff7700',
-            line_color=pred_color, mode="lines",
-            opacity=0.1
-        )
-    )
-    
-    # fig.update_traces(textposition='top center')
-    
-    fig.update_layout(
-        font=dict(
-            # family="Courier New",
-            size=fontsize,  # Set the font size here
-        ),
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="center",
-            x=0.5
-        ),
-        title='Model: ARIMA. Input: Past offer balance as selected.',
-        xaxis_title='Aid year',
-        yaxis_title='Offer balance'
-    )
-    
-    fig.update_traces(marker_size=marker_size)
-    fig.update_xaxes(showgrid=True, ticklabelmode="period")
-    # fig.update_yaxes(range=[0, None])
-    # fig.update_layout(yaxis_range=[0, max(summed[target].max(), summed[f'Predicted_{target}'].max())*1.2])
-    return fig
+app.layout = get_layout(
+    factors=[
+        program_ids, academic_levels, academic_plans, 
+        report_categories, report_codes, need_based, residency
+    ],
+    factor_labels=[
+        'program-desc', 'academic-level', 'academic-plan', 
+        'report-category', 'report-code', 'need-based', 'residency'
+    ],
+    summed=summed
+)
 
 @app.callback(
     Output("time-series-chart", "figure"), 
