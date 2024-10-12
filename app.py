@@ -4,7 +4,7 @@
 # Import packages
 import pandas as pd
 import dash_bootstrap_components as dbc
-from utils import *
+from util.utils import *
 from util.plotter import *
 from config import *
 import warnings, logging
@@ -73,10 +73,7 @@ callbacks = [
         'academic-level', 'program-desc', 'academic-plan', 
         'report-category', 'report-code', 'need-based', 'residency']
 ] + [Input('radio-time-series', 'value'), Input('radio-count-series', 'value')]
-
-@app.callback(
-    callbacks
-)
+@app.callback(callbacks)
 def update_data(
     level, program_desc, academic_plan, 
     report_category, report_code, need_based, residency,

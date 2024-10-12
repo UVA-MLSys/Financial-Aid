@@ -57,7 +57,10 @@ def draw_party_fig(years, data, annotate):
 
 def get_layout(factors, factor_labels, summed):
     return html.Div([
-        html.H3('Financial Aid Analysis (Undergrad)'),
+        html.H3(
+            'Financial Aid Analysis (Undergrad)', 
+            style={'textAlign':'center', 'textColor':'blue', 'fontWeight':'bold'}
+        ),
         dbc.Row([
             dbc.Col([
                 # html.H3("Program:"),
@@ -69,7 +72,7 @@ def get_layout(factors, factor_labels, summed):
                 ),
             ])
             for column, values in zip(factor_labels, factors)
-        ], style={'margin':'auto', 'padding':'5px'}),
+        ], style={'margin':'auto', 'padding':'2px'}),
         dbc.Row([
             dbc.Col([
                 dcc.Graph(id=graph_id), 
@@ -78,13 +81,13 @@ def get_layout(factors, factor_labels, summed):
                     value='Annotation On', id=radio_id, 
                     inline=True, 
                     # https://stackoverflow.com/questions/75692815/increase-space-between-text-and-icon-in-dash-checklist
-                    labelStyle= {"margin":"1rem"} 
+                    labelStyle= {"margin":"10px"} 
                 ),], width=width)
             
             for graph_id, radio_id, width in [
                 ('time-series-chart', 'radio-time-series', 7), 
                 ('count-chart', 'radio-count-series', 5)]
-            ]
+            ], style={'margin':'auto', 'padding':'2px'}
         ),
         dbc.Row(
             dbc.Col([
