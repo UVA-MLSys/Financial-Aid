@@ -69,23 +69,47 @@ app.layout = get_layout(
     ], summed=summed
 )
 
-@callback(
-    Output('output-state', 'children'),
-    State('constraint-start', 'value'),
-    State('constraint-end', 'value'),
-    State('constraint-amount', 'value'),
-    Input('submit-button', 'n_clicks')
-)
-def add_constraint(start, end, amount, n_clicks):
-    if n_clicks is None or n_clicks == 0: return ''
+callbacks = [Output('output-state', 'children')
+    ] + [
+        State(f"dropdown-{value}", "value") for value in [
+        'academic-level', 'program-desc', 'academic-plan', 
+        'report-category', 'report-code', 'need-based', 'residency']
+    ] + [
+        State(id, 'value') for id in [
+            'constraint-start', 'constraint-end', 'constraint-amount']
+    ] + [Input('submit-button', 'n_clicks')]
+@callback(callbacks)
+def add_constraint(
+    level, program_desc, academic_plan, 
+    report_category, report_code, need_based, 
+    residency, start, end, amount, 
+    n_clicks
+):
+    if n_clicks is None or n_clicks == 0: return '',
     
-    if start is None or end is None or amount is None: return 'Please enter all values'
-    if start > end: return 'Start cannot be greater than end'
-    if amount < 0: return 'Amount cannot be negative'
+    if start is None or end is None or amount is None: return 'Please enter all values',
+    if start > end: return 'Start cannot be greater than end',
+    if amount < 0: return 'Amount cannot be negative',
     if not ((2000 <=start<=2050) & (2000 <= end <= 2050)): 
-        return 'Start and end years should be between 2000 and 2050'
+        return 'Start and end years should be between 2000 and 2050',
     
-    return f'Clicked {n_clicks} times. Start: {start}, End: {end}, Amount: {amount}'
+    if os.path.exists(data_root + 'constraints.csv'):
+        constraints = pd.read_csv(data_root + 'constraints.csv')
+    else:
+        constraints = pd.DataFrame(columns=[
+            'level', 'program_desc', 'academic_plan', 
+            'report_category', 'report_code', 'need_based', 
+            'residency', 'start', 'end', 'amount'
+        ])
+    
+    constraints.loc[len(constraints)] = [
+        level, program_desc, academic_plan, 
+        report_category, report_code, need_based, 
+        residency, start, end, amount
+    ]
+    constraints.to_csv(data_root + 'constraints.csv', index=False)
+    
+    return f'Clicked {n_clicks} times. Start: {start}, End: {end}, Amount: {amount}',
 
 @callback(
     Output('dropdown-academic-plan', 'options'),
@@ -103,6 +127,37 @@ def set_academic_plans(program):
             new_academic_plans = new_academic_plans[1:]
     # print(program, new_academic_plans)
     return new_academic_plans
+
+def limit_predictions(predictions, keys):
+    # print(f'Original predictions: {predictions}')
+    constraints = pd.read_csv(data_root + 'constraints.csv')
+    common_columns = [
+        'level', 'program_desc', 'academic_plan', 'report_category', 
+        'report_code', 'need_based', 'residency'
+    ]
+    
+    for index, col in enumerate(common_columns):
+        constraints = constraints[constraints[col] == keys[index]]
+        if constraints.shape[0] == 0:
+            return predictions
+    print(constraints[['start', 'end', 'amount']])
+    
+    years = predictions[time_column]
+    
+    for constraint in constraints[['start', 'end', 'amount']].values:
+        start = constraint[0]
+        end = constraint[1]
+        amount = constraint[2]
+        
+        for time_step in range(len(years)):
+            if not(start <= years[time_step] <= end): continue
+            
+            predictions['PREDICTED_MEAN'][time_step] = min(predictions['PREDICTED_MEAN'][time_step], amount)
+            predictions[f'{confidence}% CI - LOWER'][time_step] = min(predictions[f'{confidence}% CI - LOWER'][time_step], amount)
+            predictions[f'{confidence}% CI - UPPER'][time_step] = min(predictions[f'{confidence}% CI - UPPER'][time_step], amount)
+
+    # print(f'Capped predictions: {predictions}')
+    return predictions
 
 callbacks = [
     Output("time-series-chart", "figure"), 
@@ -142,9 +197,15 @@ def update_data(
     }
     
     predictions = predict(summed, predictions)
+    if os.path.exists(data_root + 'constraints.csv'):
+        predictions = limit_predictions(
+            predictions, [level, program_desc, academic_plan, 
+            report_category, report_code, need_based, residency]
+        )
+        
     predictions = autoregressive(summed, predictions) 
+    predictions = pd.DataFrame(predictions)
     
-    predictions = pd.DataFrame(predictions)   
     fig = draw_main_fig(summed, predictions, radio_time)
     
     summed = summed.merge(count_df, on=time_column)
