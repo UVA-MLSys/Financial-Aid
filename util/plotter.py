@@ -1,5 +1,5 @@
 from config import *
-from dash import Dash, html, dash_table, dcc, callback, Output, Input
+from dash import html, dash_table, dcc
 from numerize.numerize import numerize
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
@@ -46,7 +46,7 @@ def draw_party_fig(years, data, annotate):
             xanchor="center", x=0.5
         ),
         title='<b>Enrolled Students</b>',
-        xaxis_title='Aid year', yaxis_title='Count',
+        xaxis_title='<b>Aid year</b>', yaxis_title='<b>Count</b>'
         # hovermode='closest' # # Update the layout to show the coordinates
     )
     party_fig.update_xaxes(showgrid=True, ticklabelmode="period")
@@ -81,7 +81,8 @@ def get_layout(factors, factor_labels, summed):
                     value='Annotation On', id=radio_id, 
                     inline=True, 
                     # https://stackoverflow.com/questions/75692815/increase-space-between-text-and-icon-in-dash-checklist
-                    labelStyle= {"margin":"10px"} 
+                    labelStyle= {"margin":"10px"},
+                    inputStyle={"margin": "10px"}
                 ),], width=width)
             
             for graph_id, radio_id, width in [
@@ -89,7 +90,7 @@ def get_layout(factors, factor_labels, summed):
                 ('count-chart', 'radio-count-series', 5)]
             ], style={'margin':'auto', 'padding':'2px'}
         ),
-        dbc.Row(
+        dbc.Row([
             dbc.Col([
                 html.H3("Financial Aid Table:"),
                 # https://dash.plotly.com/datatable/style#styling-editable-columns
@@ -101,8 +102,18 @@ def get_layout(factors, factor_labels, summed):
                         'fontWeight': 'bold'
                     },
                 )
-            ]), style={'width': '75vw', 'margin':'auto'}    
-        )
+            ], width=7),
+            # a dbc col to take start and end year as input, also the contraint value
+            dbc.Col([
+                html.H3("Add constraints for this prediction:"),
+                dcc.Input(id='constraint-start', type='number', placeholder='Enter start year'),
+                dcc.Input(id='constraint-end', type='number', placeholder='Enter end year'),
+                dcc.Input(id='constraint-amount', type='number', placeholder='Prediction limit'),
+                html.Button(id='submit-button', n_clicks=0, children='Submit'),
+                html.Div(id='output-state')
+            ], width=5),
+            
+        ])
     ], style={'width': '95vw', 'margin':'auto', 'text-align': 'center'})
     
 def draw_main_fig(summed, predictions, annotate):
@@ -183,8 +194,8 @@ def draw_main_fig(summed, predictions, annotate):
             y=1.02, xanchor="center", x=0.5
         ),
         title='<b>Model: ARIMA</b>',
-        xaxis_title='Aid year',
-        yaxis_title='Offer balance'
+        xaxis_title='<b>Aid year</b>',
+        yaxis_title='<b>Offer balance</b>'
     )
     
     fig.update_traces(marker_size=marker_size)

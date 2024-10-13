@@ -4,44 +4,41 @@
 # Import packages
 import pandas as pd
 import dash_bootstrap_components as dbc
-import dash_auth
+from dash import Dash, callback, Output, Input, State
 from util.utils import *
 from util.plotter import *
 from config import *
-import argparse, json
-import warnings, logging
+import argparse, json, dash_auth, warnings, logging, os
 warnings.filterwarnings('ignore')
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(
-    filename=data_root + 'myapp.log', 
-    level=logging.INFO
-)
 logger.info('Started')
 
 # data input
 df = pd.read_csv(data_root + 'Merged.csv')
+for col in ['FUNDED_PARTY', 'TOTAL_PARTY']:
+    df[col] = pd.to_numeric(df[col], errors='coerce').astype('Int64')
 
 # Initialize the app
-VALID_USERNAME_PASSWORD_PAIRS = json.load(open(data_root + 'login.json'))
 external_stylesheets = [dbc.themes.BOOTSTRAP]
-app = Dash(__name__, external_stylesheets=external_stylesheets, description='Financial Aid')
-server = app.server
-auth = dash_auth.BasicAuth(
-    app,
-    VALID_USERNAME_PASSWORD_PAIRS
+app = Dash(
+    __name__, external_stylesheets=external_stylesheets, 
+    description='Financial Aid'
 )
+server = app.server
+
+if os.path.exists(data_root + 'login.json'):
+    login_info = json.load(open(data_root + 'login.json'))
+    auth = dash_auth.BasicAuth(
+        app, login_info['credentials'], 
+        secret_key = login_info['secret_key']
+    )
+else:
+    logging.info('Login file not found')
 
 # remove ' Undergraduate' from ACADEMIC_PROGRAM_DESC
 for value in [' Undergraduate', ' Undergrad']:
     df['ACADEMIC_PROGRAM_DESC'] = df['ACADEMIC_PROGRAM_DESC'].apply(lambda x: x.replace(value, ''))
-    
-def get_categories(df, col, default_value):
-    unique_values = list(sorted(df[col].unique()))
-    # default value will work as Total
-    unique_values = [x for x in unique_values if x != 'Total']
-    
-    return [default_value] + unique_values
 
 program_ids = get_categories(df, 'ACADEMIC_PROGRAM_DESC', default_values['ACADEMIC_PROGRAM_DESC'])
 academic_plans = get_categories(df, 'ACADEMIC_PLAN', default_values['ACADEMIC_PLAN'])
@@ -71,6 +68,41 @@ app.layout = get_layout(
         'report-category', 'report-code', 'need-based', 'residency'
     ], summed=summed
 )
+
+@callback(
+    Output('output-state', 'children'),
+    State('constraint-start', 'value'),
+    State('constraint-end', 'value'),
+    State('constraint-amount', 'value'),
+    Input('submit-button', 'n_clicks')
+)
+def add_constraint(start, end, amount, n_clicks):
+    if n_clicks is None or n_clicks == 0: return ''
+    
+    if start is None or end is None or amount is None: return 'Please enter all values'
+    if start > end: return 'Start cannot be greater than end'
+    if amount < 0: return 'Amount cannot be negative'
+    if not ((2000 <=start<=2050) & (2000 <= end <= 2050)): 
+        return 'Start and end years should be between 2000 and 2050'
+    
+    return f'Clicked {n_clicks} times. Start: {start}, End: {end}, Amount: {amount}'
+
+@callback(
+    Output('dropdown-academic-plan', 'options'),
+    Input('dropdown-program-desc', 'value')
+)
+def set_academic_plans(program):
+    if program == default_values['ACADEMIC_PROGRAM_DESC']:
+        return get_categories(df, 'ACADEMIC_PLAN', default_values['ACADEMIC_PLAN'])
+    else:
+        temp = df[df['ACADEMIC_PROGRAM_DESC']==program]
+        new_academic_plans = get_categories(temp, 'ACADEMIC_PLAN', default_values['ACADEMIC_PLAN'])
+        
+        # if there are only two values, then remove the default value
+        if len(new_academic_plans) == 2:
+            new_academic_plans = new_academic_plans[1:]
+    # print(program, new_academic_plans)
+    return new_academic_plans
 
 callbacks = [
     Output("time-series-chart", "figure"), 
@@ -123,7 +155,9 @@ def update_data(
         if col in ['AID_YEAR']: continue
         index = ~summed[col].isna()
         # summed.loc[index, col] = summed.loc[index, col].apply(numerize, args=(1,))
-        summed.loc[index, col] = summed.loc[index, col].apply('{:,.2f}'.format)
+        if summed[col].dtype == 'float64':
+            # summed.loc[index, col] = summed.loc[index, col].apply('{:,.2f}'.format)
+            summed.loc[index, col] = summed.loc[index, col].apply(numerize, args=(1, ))
     
     return fig, party_fig, summed.round(0).to_dict('records')
 
@@ -139,6 +173,12 @@ if __name__ == '__main__':
         help='Host address. Should be 0.0.0.0 if running on AWS, 127.0.0.1 if running locally.'
     )
     parser.add_argument('--port', type=int, default=8050)
+    parser.add_argument('--log_file', type=str, default=None)
     args = parser.parse_args()
     
+    if args.log_file is not None:
+        logging.basicConfig(
+            filename=data_root + args.log_file, level=logging.INFO
+        )
+
     app.run(host=args.host, port=args.port, debug=True)

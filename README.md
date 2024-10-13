@@ -39,6 +39,7 @@ python3 -m pip install -r requirements.txt
 ```python
 app.run_server(host= '0.0.0.0', port=8050)
 gunicorn app:server --bind=0.0.0.0:8050
-screen gunicorn app --host=0.0.0.0:server --bind=0.0.0.0:8050 &
+gunicorn --workers 3 app:server --bind=0.0.0.0:8050
+screen gunicorn --workers 3 app:server --bind=0.0.0.0:8050 &
 deactivate
 ```

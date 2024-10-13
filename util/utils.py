@@ -3,6 +3,13 @@ import numpy as np
 from statsmodels.tsa.arima.model import ARIMA
 from config import *
 
+def get_categories(df, col, default_value):
+    unique_values = list(sorted(df[col].unique()))
+    # default value will work as Total
+    unique_values = [x for x in unique_values if x != 'Total']
+    
+    return [default_value] + unique_values
+
 def merge(left:pd.DataFrame, right:pd.DataFrame, key=None, how='inner'):
     common = set(left.columns) & set(right.columns)
     
