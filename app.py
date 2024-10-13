@@ -69,7 +69,9 @@ app.layout = get_layout(
     ], summed=summed
 )
 
-callbacks = [Output('output-state', 'children')
+callbacks = [
+        Output('output-state', 'children'),
+        Output('constraint-table', 'data'),
     ] + [
         State(f"dropdown-{value}", "value") for value in [
         'academic-level', 'program-desc', 'academic-plan', 
@@ -85,14 +87,6 @@ def add_constraint(
     residency, start, end, amount, 
     n_clicks
 ):
-    if n_clicks is None or n_clicks == 0: return '',
-    
-    if start is None or end is None or amount is None: return 'Please enter all values',
-    if start > end: return 'Start cannot be greater than end',
-    if amount < 0: return 'Amount cannot be negative',
-    if not ((2000 <=start<=2050) & (2000 <= end <= 2050)): 
-        return 'Start and end years should be between 2000 and 2050',
-    
     if os.path.exists(data_root + 'constraints.csv'):
         constraints = pd.read_csv(data_root + 'constraints.csv')
     else:
@@ -101,15 +95,29 @@ def add_constraint(
             'report_category', 'report_code', 'need_based', 
             'residency', 'start', 'end', 'amount'
         ])
+        
+    if n_clicks is None or n_clicks == 0: 
+        output = ''
+    elif start is None or end is None or amount is None: 
+        output = 'Please enter all values'
+    elif start > end: 
+        output = 'Start cannot be greater than end'
+    elif amount < 0: 
+        output = 'Amount cannot be negative'
+    elif not ((2000 <=start<=2050) & (2000 <= end <= 2050)): 
+        output = 'Start and end years should be between 2000 and 2050'
+    else:
+        constraints.loc[len(constraints)] = [
+            level, program_desc, academic_plan, 
+            report_category, report_code, need_based, 
+            residency, start, end, amount
+        ]
+        constraints.to_csv(data_root + 'constraints.csv', index=False)
+        output = f'Constraint added.Start: {start}, End: {end}, Amount: {amount}'
     
-    constraints.loc[len(constraints)] = [
-        level, program_desc, academic_plan, 
-        report_category, report_code, need_based, 
-        residency, start, end, amount
-    ]
-    constraints.to_csv(data_root + 'constraints.csv', index=False)
-    
-    return f'Clicked {n_clicks} times. Start: {start}, End: {end}, Amount: {amount}',
+    constraints['amount'] = constraints['amount'].apply(numerize, args=(1, ))
+    constraints = constraints.to_dict('records')
+    return output, constraints
 
 @callback(
     Output('dropdown-academic-plan', 'options'),
@@ -140,7 +148,7 @@ def limit_predictions(predictions, keys):
         constraints = constraints[constraints[col] == keys[index]]
         if constraints.shape[0] == 0:
             return predictions
-    print(constraints[['start', 'end', 'amount']])
+    # print(constraints[['start', 'end', 'amount']])
     
     years = predictions[time_column]
     
@@ -203,7 +211,12 @@ def update_data(
             report_category, report_code, need_based, residency]
         )
         
-    predictions = autoregressive(summed, predictions) 
+    predictions = autoregressive(summed, predictions)
+    if os.path.exists(data_root + 'constraints.csv'):
+        predictions = limit_predictions(
+            predictions, [level, program_desc, academic_plan, 
+            report_category, report_code, need_based, residency]
+        ) 
     predictions = pd.DataFrame(predictions)
     
     fig = draw_main_fig(summed, predictions, radio_time)

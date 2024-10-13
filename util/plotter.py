@@ -3,6 +3,7 @@ from dash import html, dash_table, dcc
 from numerize.numerize import numerize
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
+import os, pandas as pd
 
 def improve_text_position(x):
     """ it is more efficient if the x values are sorted """
@@ -56,6 +57,23 @@ def draw_party_fig(years, data, annotate):
     return party_fig
 
 def get_layout(factors, factor_labels, summed):
+    if os.path.exists(data_root + 'constraints.csv'):
+        constraints = pd.read_csv(data_root + 'constraints.csv')
+        constraints['amount'] = constraints['amount'].apply(numerize, args=(1, ))
+        
+        constraints_table = [
+            html.H3("Constraint Table"),
+            dash_table.DataTable(
+            id='constraint-table', columns=[{'id':c, 'name':c} for c in constraints.columns],
+            data=constraints.to_dict('records'), page_size=10, 
+            style_header={
+                'backgroundColor': 'rgb(210, 210, 210)',
+                'fontWeight': 'bold'
+            },
+        )]
+    else:
+        constraints_table = [] 
+    
     return html.Div([
         html.H3(
             'Financial Aid Analysis', 
@@ -96,24 +114,27 @@ def get_layout(factors, factor_labels, summed):
                 # https://dash.plotly.com/datatable/style#styling-editable-columns
                 dash_table.DataTable(
                     id='table', columns=[{'id':c, 'name':c} for c in summed.columns],
-                    data=summed.to_dict('records'), page_size=10, 
+                    data=summed.to_dict('records'), page_size=8, 
                     style_header={
                         'backgroundColor': 'rgb(210, 210, 210)',
                         'fontWeight': 'bold'
                     },
                 )
-            ], width=7),
-            # a dbc col to take start and end year as input, also the contraint value
-            dbc.Col([
-                html.H3("Add constraints for this prediction:"),
+            ], width=7), 
+            dbc.Col(dbc.Row([
+                html.H4("Add prediction constraints:"),
                 dcc.Input(id='constraint-start', type='number', placeholder='Enter start year'),
                 dcc.Input(id='constraint-end', type='number', placeholder='Enter end year'),
                 dcc.Input(id='constraint-amount', type='number', placeholder='Prediction limit'),
                 html.Button(id='submit-button', n_clicks=0, children='Submit'),
                 html.Div(id='output-state')
-            ], width=5),
+            ], align='center', justify='center', style={'margin-left':'50px'}), width=4)
             
-        ])
+        ], style={'margin':'auto', 'align':'center', 'padding':'10px'}),
+        dbc.Row([
+            dbc.Col(constraints_table)
+            # a dbc col to take start and end year as input, also the contraint value
+        ], style={'width': '80vw','margin':'auto', 'align':'center', 'padding':'2px'})
     ], style={'width': '95vw', 'margin':'auto', 'text-align': 'center'})
     
 def draw_main_fig(summed, predictions, annotate):
