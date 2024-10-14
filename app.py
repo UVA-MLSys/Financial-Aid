@@ -69,56 +69,58 @@ app.layout = get_layout(
     ], summed=summed
 )
 
-callbacks = [
-        Output('output-state', 'children'),
-        Output('constraint-table', 'data'),
-    ] + [
-        State(f"dropdown-{value}", "value") for value in [
-        'academic-level', 'program-desc', 'academic-plan', 
-        'report-category', 'report-code', 'need-based', 'residency']
-    ] + [
-        State(id, 'value') for id in [
-            'constraint-start', 'constraint-end', 'constraint-amount']
-    ] + [Input('submit-button', 'n_clicks')]
-@callback(callbacks)
-def add_constraint(
-    level, program_desc, academic_plan, 
-    report_category, report_code, need_based, 
-    residency, start, end, amount, 
-    n_clicks
-):
-    if os.path.exists(data_root + 'constraints.csv'):
-        constraints = pd.read_csv(data_root + 'constraints.csv')
-    else:
-        constraints = pd.DataFrame(columns=[
-            'level', 'program_desc', 'academic_plan', 
-            'report_category', 'report_code', 'need_based', 
-            'residency', 'start', 'end', 'amount'
-        ])
+# add constraints for the model predictions
+# callbacks = [
+#         Output('output-state', 'children'),
+#         Output('constraint-table', 'data'),
+#     ] + [
+#         State(f"dropdown-{value}", "value") for value in [
+#         'academic-level', 'program-desc', 'academic-plan', 
+#         'report-category', 'report-code', 'need-based', 'residency']
+#     ] + [
+#         State(id, 'value') for id in [
+#             'constraint-start', 'constraint-end', 'constraint-amount']
+#     ] + [Input('submit-button', 'n_clicks')]
+# @callback(callbacks)
+# def add_constraint(
+#     level, program_desc, academic_plan, 
+#     report_category, report_code, need_based, 
+#     residency, start, end, amount, 
+#     n_clicks
+# ):
+#     if os.path.exists(data_root + 'constraints.csv'):
+#         constraints = pd.read_csv(data_root + 'constraints.csv')
+#     else:
+#         constraints = pd.DataFrame(columns=[
+#             'level', 'program_desc', 'academic_plan', 
+#             'report_category', 'report_code', 'need_based', 
+#             'residency', 'start', 'end', 'amount'
+#         ])
         
-    if n_clicks is None or n_clicks == 0: 
-        output = ''
-    elif start is None or end is None or amount is None: 
-        output = 'Please enter all values'
-    elif start > end: 
-        output = 'Start cannot be greater than end'
-    elif amount < 0: 
-        output = 'Amount cannot be negative'
-    elif not ((2000 <=start<=2050) & (2000 <= end <= 2050)): 
-        output = 'Start and end years should be between 2000 and 2050'
-    else:
-        constraints.loc[len(constraints)] = [
-            level, program_desc, academic_plan, 
-            report_category, report_code, need_based, 
-            residency, start, end, amount
-        ]
-        constraints.to_csv(data_root + 'constraints.csv', index=False)
-        output = f'Constraint added.Start: {start}, End: {end}, Amount: {amount}'
+#     if n_clicks is None or n_clicks == 0: 
+#         output = ''
+#     elif start is None or end is None or amount is None: 
+#         output = 'Please enter all values'
+#     elif start > end: 
+#         output = 'Start cannot be greater than end'
+#     elif amount < 0: 
+#         output = 'Amount cannot be negative'
+#     elif not ((2000 <=start<=2050) & (2000 <= end <= 2050)): 
+#         output = 'Start and end years should be between 2000 and 2050'
+#     else:
+#         constraints.loc[len(constraints)] = [
+#             level, program_desc, academic_plan, 
+#             report_category, report_code, need_based, 
+#             residency, start, end, amount
+#         ]
+#         constraints.to_csv(data_root + 'constraints.csv', index=False)
+#         output = f'Constraint added.Start: {start}, End: {end}, Amount: {amount}'
     
-    constraints['amount'] = constraints['amount'].apply(numerize, args=(1, ))
-    constraints = constraints.to_dict('records')
-    return output, constraints
+#     constraints['amount'] = constraints['amount'].apply(numerize, args=(1, ))
+#     constraints = constraints.to_dict('records')
+#     return output, constraints
 
+# update list of academic plans based on selected program description
 @callback(
     Output('dropdown-academic-plan', 'options'),
     Input('dropdown-program-desc', 'value')
@@ -136,37 +138,7 @@ def set_academic_plans(program):
     # print(program, new_academic_plans)
     return new_academic_plans
 
-def limit_predictions(predictions, keys):
-    # print(f'Original predictions: {predictions}')
-    constraints = pd.read_csv(data_root + 'constraints.csv')
-    common_columns = [
-        'level', 'program_desc', 'academic_plan', 'report_category', 
-        'report_code', 'need_based', 'residency'
-    ]
-    
-    for index, col in enumerate(common_columns):
-        constraints = constraints[constraints[col] == keys[index]]
-        if constraints.shape[0] == 0:
-            return predictions
-    # print(constraints[['start', 'end', 'amount']])
-    
-    years = predictions[time_column]
-    
-    for constraint in constraints[['start', 'end', 'amount']].values:
-        start = constraint[0]
-        end = constraint[1]
-        amount = constraint[2]
-        
-        for time_step in range(len(years)):
-            if not(start <= years[time_step] <= end): continue
-            
-            predictions['PREDICTED_MEAN'][time_step] = min(predictions['PREDICTED_MEAN'][time_step], amount)
-            predictions[f'{confidence}% CI - LOWER'][time_step] = min(predictions[f'{confidence}% CI - LOWER'][time_step], amount)
-            predictions[f'{confidence}% CI - UPPER'][time_step] = min(predictions[f'{confidence}% CI - UPPER'][time_step], amount)
-
-    # print(f'Capped predictions: {predictions}')
-    return predictions
-
+# update the prediction plot and party count based on the selection
 callbacks = [
     Output("time-series-chart", "figure"), 
     Output("count-chart", "figure"), 
@@ -234,6 +206,31 @@ def update_data(
             summed.loc[index, col] = summed.loc[index, col].apply(numerize, args=(1, ))
     
     return fig, party_fig, summed.round(0).to_dict('records')
+
+# add rows to the constraint table
+@callback(
+    Output('constraint-table', 'data'),
+    Input('editing-rows-button', 'n_clicks'),
+    State('constraint-table', 'data'),
+    State('constraint-table', 'columns'))
+def add_row(n_clicks, rows, columns):
+    if n_clicks == 0: return rows
+    
+    rows.append({c['id']: '' for c in columns})
+    return rows
+
+# update the table only if valid input and then cache it
+@callback(
+    # Output('constraint-table', 'data'),
+    Input('constraint-table', 'data_timestamp'),
+    State('constraint-table', 'data'),
+    State('constraint-table', 'columns'))
+def update_table(data_timestamp, rows, columns):
+    # convert to eastern timezone
+    date = pd.to_datetime(data_timestamp, unit='ms', utc=True, dayfirst=True).tz_convert('US/Eastern')
+    # print(data_timestamp, date)
+    # print(rows)
+    # return rows
 
     
 # Run the app

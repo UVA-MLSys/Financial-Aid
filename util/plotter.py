@@ -5,6 +5,110 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import os, pandas as pd
 
+
+def get_layout(factors, factor_labels, summed):
+    style_header = {
+        'backgroundColor': 'rgb(128, 128, 128)',
+        'fontWeight': 'bold',
+        'textAlign': 'center'
+    }
+    
+    if os.path.exists(data_root + 'constraints.csv'):
+        constraints = pd.read_csv(data_root + 'constraints.csv')
+        constraints['amount'] = constraints['amount'].apply(numerize, args=(1, ))
+        
+        columns = []
+        for index, c in enumerate(constraints.columns):
+            if index < len(factors): columns.append({'id':c, 'name':c, 'presentation': 'dropdown'})
+            else: columns.append({'id':c, 'name':c})
+        
+        constraints_table = [
+            html.H3("Constraint Table"),
+            dash_table.DataTable(
+                id='constraint-table', columns=columns,
+                data=constraints.to_dict('records'), page_size=10, 
+                style_header=style_header, 
+                editable=True, row_deletable=True, 
+                # row_selectable='multi',
+                export_format='csv',
+                # https://dash.plotly.com/datatable/dropdowns
+                dropdown={
+                    col: {
+                        'options': [
+                            {'label':i, 'value':i} for i in factors[factor_index]
+                        ]
+                    }
+                    for factor_index, col in enumerate(constraints.columns[:len(factors)])
+                }
+            ),
+            html.Div(id='dropdown_per_row_container'),
+            html.Button('Add Row', id='editing-rows-button', n_clicks=0),
+        ]
+    else:
+        constraints_table = [] 
+    
+    return html.Div([
+        html.H3(
+            'Financial Aid Predictive Analysis', 
+            style={'textAlign':'center', 'textColor':'blue', 'fontWeight':'bold'}
+        ),
+        dbc.Row([
+            dbc.Col([
+                # html.H3("Program:"),
+                dcc.Dropdown(
+                    id=f"dropdown-{column}",
+                    options = values,value = values[0],
+                    clearable=True, searchable=True,
+                    # persistence=True, persistence_type='local'
+                ),
+            ])
+            for column, values in zip(factor_labels, factors)
+        ], style={'margin':'auto', 'padding':'2px'}),
+        dbc.Row([
+            dbc.Col([
+                dcc.Graph(id=graph_id), 
+                dcc.RadioItems(
+                    options=['Annotation On', 'Annotation Off'], 
+                    value='Annotation On', id=radio_id, 
+                    inline=True, 
+                    # https://stackoverflow.com/questions/75692815/increase-space-between-text-and-icon-in-dash-checklist
+                    labelStyle= {"margin":"10px"},
+                    inputStyle={"margin": "10px"}
+                ),], width=width)
+            
+            for graph_id, radio_id, width in [
+                ('time-series-chart', 'radio-time-series', 7), 
+                ('count-chart', 'radio-count-series', 5)]
+            ], style={'margin':'auto', 'padding':'2px'}
+        ),
+        dbc.Row([
+            dbc.Col([
+                html.H3("Financial Aid Table:"),
+                # https://dash.plotly.com/datatable/style#styling-editable-columns
+                dash_table.DataTable(
+                    id='table', columns=[{'id':c, 'name':c} for c in summed.columns],
+                    data=summed.to_dict('records'), page_size=8, 
+                    style_header=style_header, 
+                    # editable=True, row_deletable=True, row_selectable=True, 
+                    export_format='csv'
+                )
+            ]), 
+            # dbc.Col(dbc.Row([
+            #     html.H4("Add prediction constraints:"),
+            #     dcc.Input(id='constraint-start', type='number', placeholder='Enter start year'),
+            #     dcc.Input(id='constraint-end', type='number', placeholder='Enter end year'),
+            #     dcc.Input(id='constraint-amount', type='number', placeholder='Prediction limit'),
+            #     html.Button(id='submit-button', n_clicks=0, children='Submit'),
+            #     html.Div(id='output-state')
+            # ], align='center', justify='center', style={'margin-left':'50px'}), width=4)
+            
+        ], style={'width': '65vw','margin':'auto', 'align':'center', 'padding':'10px'}),
+        dbc.Row([
+            dbc.Col(constraints_table)
+            # a dbc col to take start and end year as input, also the contraint value
+        ], style={'width': '80vw','margin':'auto','align':'center', 'padding':'5px'})
+    ], style={'width': '95vw','align':'center', 'margin':'auto', 'text-align': 'center'})
+
 def improve_text_position(x):
     """ it is more efficient if the x values are sorted """
     # fix indentation 
@@ -55,87 +159,6 @@ def draw_party_fig(years, data, annotate):
     # party_fig.update_yaxes(range=[0, None])
     
     return party_fig
-
-def get_layout(factors, factor_labels, summed):
-    if os.path.exists(data_root + 'constraints.csv'):
-        constraints = pd.read_csv(data_root + 'constraints.csv')
-        constraints['amount'] = constraints['amount'].apply(numerize, args=(1, ))
-        
-        constraints_table = [
-            html.H3("Constraint Table"),
-            dash_table.DataTable(
-            id='constraint-table', columns=[{'id':c, 'name':c} for c in constraints.columns],
-            data=constraints.to_dict('records'), page_size=10, 
-            style_header={
-                'backgroundColor': 'rgb(210, 210, 210)',
-                'fontWeight': 'bold'
-            },
-        )]
-    else:
-        constraints_table = [] 
-    
-    return html.Div([
-        html.H3(
-            'Financial Aid Analysis', 
-            style={'textAlign':'center', 'textColor':'blue', 'fontWeight':'bold'}
-        ),
-        dbc.Row([
-            dbc.Col([
-                # html.H3("Program:"),
-                dcc.Dropdown(
-                    id=f"dropdown-{column}",
-                    options = values,value = values[0],
-                    clearable=True, searchable=True,
-                    # persistence=True, persistence_type='local'
-                ),
-            ])
-            for column, values in zip(factor_labels, factors)
-        ], style={'margin':'auto', 'padding':'2px'}),
-        dbc.Row([
-            dbc.Col([
-                dcc.Graph(id=graph_id), 
-                dcc.RadioItems(
-                    options=['Annotation On', 'Annotation Off'], 
-                    value='Annotation On', id=radio_id, 
-                    inline=True, 
-                    # https://stackoverflow.com/questions/75692815/increase-space-between-text-and-icon-in-dash-checklist
-                    labelStyle= {"margin":"10px"},
-                    inputStyle={"margin": "10px"}
-                ),], width=width)
-            
-            for graph_id, radio_id, width in [
-                ('time-series-chart', 'radio-time-series', 7), 
-                ('count-chart', 'radio-count-series', 5)]
-            ], style={'margin':'auto', 'padding':'2px'}
-        ),
-        dbc.Row([
-            dbc.Col([
-                html.H3("Financial Aid Table:"),
-                # https://dash.plotly.com/datatable/style#styling-editable-columns
-                dash_table.DataTable(
-                    id='table', columns=[{'id':c, 'name':c} for c in summed.columns],
-                    data=summed.to_dict('records'), page_size=8, 
-                    style_header={
-                        'backgroundColor': 'rgb(210, 210, 210)',
-                        'fontWeight': 'bold'
-                    },
-                )
-            ], width=7), 
-            dbc.Col(dbc.Row([
-                html.H4("Add prediction constraints:"),
-                dcc.Input(id='constraint-start', type='number', placeholder='Enter start year'),
-                dcc.Input(id='constraint-end', type='number', placeholder='Enter end year'),
-                dcc.Input(id='constraint-amount', type='number', placeholder='Prediction limit'),
-                html.Button(id='submit-button', n_clicks=0, children='Submit'),
-                html.Div(id='output-state')
-            ], align='center', justify='center', style={'margin-left':'50px'}), width=4)
-            
-        ], style={'margin':'auto', 'align':'center', 'padding':'10px'}),
-        dbc.Row([
-            dbc.Col(constraints_table)
-            # a dbc col to take start and end year as input, also the contraint value
-        ], style={'width': '80vw','margin':'auto', 'align':'center', 'padding':'2px'})
-    ], style={'width': '95vw', 'margin':'auto', 'text-align': 'center'})
     
 def draw_main_fig(summed, predictions, annotate):
     fig = go.Figure()

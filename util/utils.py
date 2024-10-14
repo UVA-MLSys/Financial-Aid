@@ -3,6 +3,37 @@ import numpy as np
 from statsmodels.tsa.arima.model import ARIMA
 from config import *
 
+def limit_predictions(predictions, keys):
+    # print(f'Original predictions: {predictions}')
+    constraints = pd.read_csv(data_root + 'constraints.csv')
+    common_columns = [
+        'level', 'program_desc', 'academic_plan', 'report_category', 
+        'report_code', 'need_based', 'residency'
+    ]
+    
+    for index, col in enumerate(common_columns):
+        constraints = constraints[constraints[col] == keys[index]]
+        if constraints.shape[0] == 0:
+            return predictions
+    # print(constraints[['start', 'end', 'amount']])
+    
+    years = predictions[time_column]
+    
+    for constraint in constraints[['start', 'end', 'amount']].values:
+        start = constraint[0]
+        end = constraint[1]
+        amount = constraint[2]
+        
+        for time_step in range(len(years)):
+            if not(start <= years[time_step] <= end): continue
+            
+            predictions['PREDICTED_MEAN'][time_step] = min(predictions['PREDICTED_MEAN'][time_step], amount)
+            predictions[f'{confidence}% CI - LOWER'][time_step] = min(predictions[f'{confidence}% CI - LOWER'][time_step], amount)
+            predictions[f'{confidence}% CI - UPPER'][time_step] = min(predictions[f'{confidence}% CI - UPPER'][time_step], amount)
+
+    # print(f'Capped predictions: {predictions}')
+    return predictions
+
 def get_categories(df, col, default_value):
     unique_values = list(sorted(df[col].unique()))
     # default value will work as Total

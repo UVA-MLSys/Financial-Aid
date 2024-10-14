@@ -1,0 +1,11 @@
+/* this is because dropdowns are not rendered 
+correctly in plotly table cell for bootstrap
+https://community.plotly.com/t/dash-datatable-dropdown-and-bootstrap/76821/3
+*/
+.Select-menu-outer {
+    display: block !important;
+  }
+  
+.dash-table-container .dropdown {
+  position: static;
+}
