@@ -5,7 +5,6 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import os, pandas as pd
 
-
 def get_layout(factors, factor_labels, summed):
     style_header = {
         'backgroundColor': 'rgb(128, 128, 128)',
@@ -13,39 +12,49 @@ def get_layout(factors, factor_labels, summed):
         'textAlign': 'center'
     }
     
+    # get constraints table
     if os.path.exists(data_root + 'constraints.csv'):
         constraints = pd.read_csv(data_root + 'constraints.csv')
-        constraints['amount'] = constraints['amount'].apply(numerize, args=(1, ))
-        
-        columns = []
-        for index, c in enumerate(constraints.columns):
-            if index < len(factors): columns.append({'id':c, 'name':c, 'presentation': 'dropdown'})
-            else: columns.append({'id':c, 'name':c})
-        
-        constraints_table = [
-            html.H3("Constraint Table"),
-            dash_table.DataTable(
-                id='constraint-table', columns=columns,
-                data=constraints.to_dict('records'), page_size=10, 
-                style_header=style_header, 
-                editable=True, row_deletable=True, 
-                # row_selectable='multi',
-                export_format='csv',
-                # https://dash.plotly.com/datatable/dropdowns
-                dropdown={
-                    col: {
-                        'options': [
-                            {'label':i, 'value':i} for i in factors[factor_index]
-                        ]
-                    }
-                    for factor_index, col in enumerate(constraints.columns[:len(factors)])
-                }
-            ),
-            html.Div(id='dropdown_per_row_container'),
-            html.Button('Add Row', id='editing-rows-button', n_clicks=0),
-        ]
+        # constraints['amount'] = constraints['amount'].apply(numerize, args=(1, ))
     else:
-        constraints_table = [] 
+        print('No constraints.csv found. Creating a new one...')
+        constraints = pd.DataFrame(
+            columns=[
+                'program_desc','level','academic_plan',
+                'report_category','report_code','need_based',
+                'residency','start', 'end', 'amount']
+        )
+        print(constraints)
+        
+    columns = []
+    for index, c in enumerate(constraints.columns):
+        if c not in ['start', 'end', 'amount']: 
+            columns.append({'id':c, 'name':c, 'presentation': 'dropdown'})
+        else: columns.append({'id':c, 'name':c, 'type': 'numeric'})
+    
+    constraints_table = [
+        html.H3("Constraint Table"),
+        dash_table.DataTable(
+            id='constraint-table', columns=columns,
+            data=constraints.to_dict('records'), page_size=5, 
+            style_header=style_header, 
+            editable=True, row_deletable=True, 
+            # row_selectable='multi',
+            export_format='csv', 
+            # style_table={'overflowX': 'scroll'},
+            # https://dash.plotly.com/datatable/dropdowns
+            dropdown={
+                col: {
+                    'options': [
+                        {'label':i, 'value':i} for i in factors[factor_index]
+                    ]
+                }
+                for factor_index, col in enumerate(constraints.columns[:len(factors)])
+            }
+        ),
+        html.Div(id='dropdown_per_row_container'),
+        html.Button('Add Row', id='editing-rows-button', n_clicks=0),
+    ]
     
     return html.Div([
         html.H3(
@@ -90,18 +99,9 @@ def get_layout(factors, factor_labels, summed):
                     data=summed.to_dict('records'), page_size=8, 
                     style_header=style_header, 
                     # editable=True, row_deletable=True, row_selectable=True, 
-                    export_format='csv'
+                    export_format='csv', style_table={'overflowX': 'scroll'}
                 )
-            ]), 
-            # dbc.Col(dbc.Row([
-            #     html.H4("Add prediction constraints:"),
-            #     dcc.Input(id='constraint-start', type='number', placeholder='Enter start year'),
-            #     dcc.Input(id='constraint-end', type='number', placeholder='Enter end year'),
-            #     dcc.Input(id='constraint-amount', type='number', placeholder='Prediction limit'),
-            #     html.Button(id='submit-button', n_clicks=0, children='Submit'),
-            #     html.Div(id='output-state')
-            # ], align='center', justify='center', style={'margin-left':'50px'}), width=4)
-            
+            ])
         ], style={'width': '65vw','margin':'auto', 'align':'center', 'padding':'10px'}),
         dbc.Row([
             dbc.Col(constraints_table)

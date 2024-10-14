@@ -3,20 +3,59 @@ import numpy as np
 from statsmodels.tsa.arima.model import ARIMA
 from config import *
 
-def limit_predictions(predictions, keys):
+def sanitize_constraints(constraints):
+    # print('Verifying constraints...')
+    data = {}
+    for row in constraints:
+        for col in row:
+            if col not in data: data[col] = [row[col]]
+            else: data[col].append(row[col])
+            
+    constraints = pd.DataFrame.from_dict(data)
+    valid_row = []
+    for index, (start, end, amount) in enumerate(
+        constraints[['start', 'end', 'amount']].values
+    ):
+        if start is None or end is None or amount is None: 
+            output = 'Please enter all values'
+        elif start == '' or end == '' or amount == '': 
+            output = 'Please enter all values'
+        elif start > end: 
+            output = 'Start cannot be greater than end'
+        elif amount < 0: 
+            output = 'Amount cannot be negative'
+        elif not ((2000 <=start<=2050) & (2000 <= end <= 2050)): 
+            output = 'Start and end years should be between 2000 and 2050'
+        else:
+            output = 'All values are valid'
+            # print(index, output)
+            valid_row.append(True)
+            continue
+        
+        valid_row.append(False)
+        # print(index, output)
+        
+    # print('Done\n')
+    constraints =constraints[valid_row] 
+    constraints.to_csv(data_root + 'constraints.csv', index=False)
+    
+    return constraints
+
+def limit_predictions(predictions, keys, constraints):
     # print(f'Original predictions: {predictions}')
-    constraints = pd.read_csv(data_root + 'constraints.csv')
+    # constraints = pd.read_csv(data_root + 'constraints.csv')
     common_columns = [
-        'level', 'program_desc', 'academic_plan', 'report_category', 
+        'program_desc', 'level', 'academic_plan', 'report_category', 
         'report_code', 'need_based', 'residency'
     ]
-    
+    constraints = sanitize_constraints(constraints)
     for index, col in enumerate(common_columns):
         constraints = constraints[constraints[col] == keys[index]]
         if constraints.shape[0] == 0:
+            # print(f'No constraints for {col}: {keys[index]}')
             return predictions
-    # print(constraints[['start', 'end', 'amount']])
     
+    # print(constraints[['start', 'end', 'amount']])
     years = predictions[time_column]
     
     for constraint in constraints[['start', 'end', 'amount']].values:

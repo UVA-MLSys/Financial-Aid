@@ -69,57 +69,6 @@ app.layout = get_layout(
     ], summed=summed
 )
 
-# add constraints for the model predictions
-# callbacks = [
-#         Output('output-state', 'children'),
-#         Output('constraint-table', 'data'),
-#     ] + [
-#         State(f"dropdown-{value}", "value") for value in [
-#         'academic-level', 'program-desc', 'academic-plan', 
-#         'report-category', 'report-code', 'need-based', 'residency']
-#     ] + [
-#         State(id, 'value') for id in [
-#             'constraint-start', 'constraint-end', 'constraint-amount']
-#     ] + [Input('submit-button', 'n_clicks')]
-# @callback(callbacks)
-# def add_constraint(
-#     level, program_desc, academic_plan, 
-#     report_category, report_code, need_based, 
-#     residency, start, end, amount, 
-#     n_clicks
-# ):
-#     if os.path.exists(data_root + 'constraints.csv'):
-#         constraints = pd.read_csv(data_root + 'constraints.csv')
-#     else:
-#         constraints = pd.DataFrame(columns=[
-#             'level', 'program_desc', 'academic_plan', 
-#             'report_category', 'report_code', 'need_based', 
-#             'residency', 'start', 'end', 'amount'
-#         ])
-        
-#     if n_clicks is None or n_clicks == 0: 
-#         output = ''
-#     elif start is None or end is None or amount is None: 
-#         output = 'Please enter all values'
-#     elif start > end: 
-#         output = 'Start cannot be greater than end'
-#     elif amount < 0: 
-#         output = 'Amount cannot be negative'
-#     elif not ((2000 <=start<=2050) & (2000 <= end <= 2050)): 
-#         output = 'Start and end years should be between 2000 and 2050'
-#     else:
-#         constraints.loc[len(constraints)] = [
-#             level, program_desc, academic_plan, 
-#             report_category, report_code, need_based, 
-#             residency, start, end, amount
-#         ]
-#         constraints.to_csv(data_root + 'constraints.csv', index=False)
-#         output = f'Constraint added.Start: {start}, End: {end}, Amount: {amount}'
-    
-#     constraints['amount'] = constraints['amount'].apply(numerize, args=(1, ))
-#     constraints = constraints.to_dict('records')
-#     return output, constraints
-
 # update list of academic plans based on selected program description
 @callback(
     Output('dropdown-academic-plan', 'options'),
@@ -146,12 +95,16 @@ callbacks = [
 ] + [Input(f"dropdown-{value}", "value") for value in [
         'academic-level', 'program-desc', 'academic-plan', 
         'report-category', 'report-code', 'need-based', 'residency']
-] + [Input('radio-time-series', 'value'), Input('radio-count-series', 'value')]
+] + [Input('radio-time-series', 'value'), Input('radio-count-series', 'value')
+] + [Input('constraint-table', 'data_timestamp'),
+    State('constraint-table', 'data'),
+    State('constraint-table', 'columns')]
 @app.callback(callbacks)
 def update_data(
     level, program_desc, academic_plan, 
     report_category, report_code, need_based, residency,
-    radio_time, radio_count
+    radio_time, radio_count,
+    timestamp, constraint_data, constraint_columns
 ):
     dis = filter_disbursement(
         df, level, program_desc, academic_plan, 
@@ -177,17 +130,19 @@ def update_data(
     }
     
     predictions = predict(summed, predictions)
-    if os.path.exists(data_root + 'constraints.csv'):
+    if len(constraint_data) > 0:
         predictions = limit_predictions(
-            predictions, [level, program_desc, academic_plan, 
-            report_category, report_code, need_based, residency]
+            predictions, [program_desc, level, academic_plan, 
+            report_category, report_code, need_based, residency],
+            constraint_data
         )
         
     predictions = autoregressive(summed, predictions)
-    if os.path.exists(data_root + 'constraints.csv'):
+    if len(constraint_data) > 0:
         predictions = limit_predictions(
-            predictions, [level, program_desc, academic_plan, 
-            report_category, report_code, need_based, residency]
+            predictions, [program_desc, level, academic_plan, 
+            report_category, report_code, need_based, residency],
+            constraint_data
         ) 
     predictions = pd.DataFrame(predictions)
     
@@ -220,14 +175,14 @@ def add_row(n_clicks, rows, columns):
     return rows
 
 # update the table only if valid input and then cache it
-@callback(
-    # Output('constraint-table', 'data'),
-    Input('constraint-table', 'data_timestamp'),
-    State('constraint-table', 'data'),
-    State('constraint-table', 'columns'))
-def update_table(data_timestamp, rows, columns):
-    # convert to eastern timezone
-    date = pd.to_datetime(data_timestamp, unit='ms', utc=True, dayfirst=True).tz_convert('US/Eastern')
+# @callback(
+#     # Output('constraint-table', 'data'),
+#     Input('constraint-table', 'data_timestamp'),
+#     State('constraint-table', 'data'),
+#     State('constraint-table', 'columns'))
+# def update_table(data_timestamp, rows, columns):
+#     # convert to eastern timezone
+#     date = pd.to_datetime(data_timestamp, unit='ms', utc=True, dayfirst=True).tz_convert('US/Eastern')
     # print(data_timestamp, date)
     # print(rows)
     # return rows
