@@ -17,25 +17,24 @@ def get_layout(factors, factor_labels, summed):
         constraints = pd.read_csv(data_root + 'constraints.csv')
         # constraints['amount'] = constraints['amount'].apply(numerize, args=(1, ))
     else:
-        print('No constraints.csv found. Creating a new one...')
+        # print('No constraints.csv found. Creating a new one...')
         constraints = pd.DataFrame(
             columns=[
-                'program_desc','level','academic_plan',
-                'report_category','report_code','need_based',
-                'residency','start', 'end', 'amount']
+                'Program', 'Level', 'Plan', 'Access', 'Report',
+                'Need Based', 'Residency','Start', 'End', 'Amount']
         )
-        print(constraints)
+        # print(constraints)
         
-    columns = []
+    dash_columns = []
     for index, c in enumerate(constraints.columns):
-        if c not in ['start', 'end', 'amount']: 
-            columns.append({'id':c, 'name':c, 'presentation': 'dropdown'})
-        else: columns.append({'id':c, 'name':c, 'type': 'numeric'})
+        if c not in ['Start', 'End', 'Amount']: 
+            dash_columns.append({'id':c, 'name':c, 'presentation': 'dropdown'})
+        else: dash_columns.append({'id':c, 'name':c, 'type': 'numeric'})
     
     constraints_table = [
         html.H3("Constraint Table"),
         dash_table.DataTable(
-            id='constraint-table', columns=columns,
+            id='constraint-table', columns=dash_columns,
             data=constraints.to_dict('records'), page_size=5, 
             style_header=style_header, 
             editable=True, row_deletable=True, 
@@ -52,7 +51,8 @@ def get_layout(factors, factor_labels, summed):
                 for factor_index, col in enumerate(constraints.columns[:len(factors)])
             }
         ),
-        html.Div(id='dropdown_per_row_container'),
+        # html.Div(id='dropdown_per_row_container'),
+        html.H3(),
         html.Button('Add Row', id='editing-rows-button', n_clicks=0),
     ]
     
@@ -106,7 +106,11 @@ def get_layout(factors, factor_labels, summed):
         dbc.Row([
             dbc.Col(constraints_table)
             # a dbc col to take start and end year as input, also the contraint value
-        ], style={'width': '80vw','margin':'auto','align':'center', 'padding':'5px'})
+        ], style={
+            'width': '90vw','margin':'auto','align':'center', 
+            'padding':'5px', 'margin-bottom':'20px'
+        }),
+        html.H3('The End')
     ], style={'width': '95vw','align':'center', 'margin':'auto', 'text-align': 'center'})
 
 def improve_text_position(x):

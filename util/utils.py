@@ -14,7 +14,7 @@ def sanitize_constraints(constraints):
     constraints = pd.DataFrame.from_dict(data)
     valid_row = []
     for index, (start, end, amount) in enumerate(
-        constraints[['start', 'end', 'amount']].values
+        constraints[['Start', 'End', 'Amount']].values
     ):
         if start is None or end is None or amount is None: 
             output = 'Please enter all values'
@@ -44,11 +44,12 @@ def sanitize_constraints(constraints):
 def limit_predictions(predictions, keys, constraints):
     # print(f'Original predictions: {predictions}')
     # constraints = pd.read_csv(data_root + 'constraints.csv')
-    common_columns = [
-        'program_desc', 'level', 'academic_plan', 'report_category', 
-        'report_code', 'need_based', 'residency'
-    ]
+    
     constraints = sanitize_constraints(constraints)
+    # no valid points found
+    if constraints.shape[0] == 0: return predictions
+    
+    common_columns = [col for col in constraints is constraints[col].dtype=='object']
     for index, col in enumerate(common_columns):
         constraints = constraints[constraints[col] == keys[index]]
         if constraints.shape[0] == 0:
@@ -58,7 +59,7 @@ def limit_predictions(predictions, keys, constraints):
     # print(constraints[['start', 'end', 'amount']])
     years = predictions[time_column]
     
-    for constraint in constraints[['start', 'end', 'amount']].values:
+    for constraint in constraints[['Start', 'End', 'Amount']].values:
         start = constraint[0]
         end = constraint[1]
         amount = constraint[2]
