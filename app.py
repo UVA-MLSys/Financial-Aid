@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 logger.info('Started')
 
 # data input
-df = pd.read_csv(data_root + 'Merged.csv')
+df = pd.read_csv(data_root + 'Merged2.csv')
 for col in ['FUNDED_PARTY', 'TOTAL_PARTY']:
     df[col] = pd.to_numeric(df[col], errors='coerce').astype('Int64')
 
@@ -198,7 +198,7 @@ if __name__ == '__main__':
         '--host', type=str, default='127.0.0.1', 
         help='Host address. Should be 0.0.0.0 if running on AWS, 127.0.0.1 if running locally.'
     )
-    parser.add_argument('--port', type=int, default=8050)
+    parser.add_argument('--port', type=int, default=80) # default 80 for http, 443 for https
     parser.add_argument('--log_file', type=str, default=None)
     args = parser.parse_args()
     

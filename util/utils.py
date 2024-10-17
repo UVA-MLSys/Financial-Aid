@@ -49,7 +49,7 @@ def limit_predictions(predictions, keys, constraints):
     # no valid points found
     if constraints.shape[0] == 0: return predictions
     
-    common_columns = [col for col in constraints is constraints[col].dtype=='object']
+    common_columns = [col for col in constraints if constraints[col].dtype=='object']
     for index, col in enumerate(common_columns):
         constraints = constraints[constraints[col] == keys[index]]
         if constraints.shape[0] == 0:
@@ -109,7 +109,7 @@ def predict(summed, predictions):
     for time_step in range(seq_len, len(years)):
         Y = summed[summed[time_column]<years[time_step]][target].values
         
-        model = ARIMA(Y, order=(seq_len, 1, 1))
+        model = ARIMA(Y, order=(2, 1, 1))
         model.initialize_approximate_diffuse()
         model_fitted = model.fit() 
         

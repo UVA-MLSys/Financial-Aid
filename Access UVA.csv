@@ -1,0 +1,19 @@
+﻿UVA_ACCESS,SCHEV,Need based
+Endowment - Grants,EF1,Y
+Institutional - Grants,"IN1, IN2, IN6",Y
+Federal - Grants,"FE1, FE2, FE7, FE9, FE11, FE13, FE14",Y
+State - Grants,"ST1, ST3, ST4, ST7, ST9, ST11, ST13, ST14",Y
+Departmental Aid,DPT,Y
+Outside - Grants,OT1,Y
+Federal - Loans,"FE3, FE4, FE6",Y
+Institutional - Loans,IN3,Y
+Federal Work Study,FE8,Y
+Endowment - Grants,"EF3, EF5",N
+Institutional - Grants,"IN4, IN7",N
+Athletic,OT7,N
+Federal - Grants,"FE12, FE15",N
+State - Grants,"ST2, ST5, ST6, ST10, ST12",N
+Outside - Grants,"OT2, OT3, OT8",N
+Federal - Loans,FE10,N
+Plus Loans,FE5,N
+Outside - Loans,OT5,N
