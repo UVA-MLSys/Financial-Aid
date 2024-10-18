@@ -45,3 +45,8 @@ fontsize = 12
 
 # logging will be saved in data_root folder
 log_file = 'myapp.log'
+
+# colors
+background_color = "lightblue"
+uva_color = '#232d4b'
+uva_header = '#dadada'

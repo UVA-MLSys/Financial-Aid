@@ -98,13 +98,14 @@ callbacks = [
 ] + [Input('radio-time-series', 'value'), Input('radio-count-series', 'value')
 ] + [Input('constraint-table', 'data_timestamp'),
     State('constraint-table', 'data'),
-    State('constraint-table', 'columns')]
+    # State('constraint-table', 'columns')
+] + [Input('pred-len', 'value')]
 @app.callback(callbacks)
 def update_data(
     level, program_desc, academic_plan, 
     report_category, report_code, need_based, residency,
     radio_time, radio_count,
-    timestamp, constraint_data, constraint_columns
+    timestamp, constraint_data, pred_len
 ):
     dis = filter_disbursement(
         df, level, program_desc, academic_plan, 
@@ -137,7 +138,7 @@ def update_data(
             constraint_data
         )
         
-    predictions = autoregressive(summed, predictions)
+    predictions = autoregressive(summed, predictions, pred_len)
     if len(constraint_data) > 0:
         predictions = limit_predictions(
             predictions, [program_desc, level, academic_plan, 

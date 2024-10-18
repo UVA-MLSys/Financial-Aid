@@ -127,7 +127,7 @@ def predict(summed, predictions):
     
     return predictions
 
-def autoregressive(summed, predictions):
+def autoregressive(summed, predictions, pred_len):
     Y = list(summed[target].values)
     if len(Y) == 0:
         return predictions

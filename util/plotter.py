@@ -5,11 +5,6 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import os, pandas as pd
 
-colors = {
-    'background': '#111111',
-    'text': '#7FDBFF'
-}
-
 def get_layout(factors, factor_labels, summed):
     style_header = {
         'backgroundColor': 'rgb(128, 128, 128)',
@@ -44,7 +39,7 @@ def get_layout(factors, factor_labels, summed):
             style_header=style_header, 
             editable=True, row_deletable=True, 
             # row_selectable='multi',
-            export_format='csv', 
+            export_format='csv', is_focused=True,
             # style_table={'overflowX': 'scroll'},
             # https://dash.plotly.com/datatable/dropdowns
             dropdown={
@@ -59,7 +54,7 @@ def get_layout(factors, factor_labels, summed):
         # html.Div(id='dropdown_per_row_container'),
         html.H3(),
         html.Button('Add Row', id='editing-rows-button', n_clicks=0),
-    ], width=9)
+    ])
     
     navbar = dbc.Navbar(
         dbc.Container(
@@ -71,15 +66,34 @@ def get_layout(factors, factor_labels, summed):
                             dbc.Col(html.Img(src='./assets/uva-logo-inline.png', height="40px")),
                             # dbc.Col(dbc.NavbarBrand("Navbar", className="ms-2")),
                         ],
-                        align="center",
-                        className="g-0",
+                        align="center"
                     ),
                     href="https://sfs.virginia.edu",
-                    style={"textDecoration": "none", 'margin':'8px'},
+                    style={'margin':'8px'},
                 )
             ]
         ),
-        color="#232d4b",
+        color=uva_color,
+        dark=True,
+    )
+    
+    bottom_navbar = dbc.Navbar(
+        dbc.Container(
+            [
+                html.A(
+                    # Use row and col to control vertical alignment of logo / brand
+                    dbc.Row(
+                        [
+                            dbc.Col(html.Img(src='./assets/uva-logo-footer-white.png', height="75px"))
+                        ],
+                        align="center"
+                    ),
+                    href="https://sfs.virginia.edu",
+                    style={'margin':'8px'},
+                )
+            ]
+        ),
+        color=uva_color,
         dark=True,
     )
     
@@ -88,15 +102,18 @@ def get_layout(factors, factor_labels, summed):
         # https://dash.plotly.com/datatable/style#styling-editable-columns
         dash_table.DataTable(
             id='table', columns=[{'id':c, 'name':c} for c in summed.columns],
-            data=summed.to_dict('records'), page_size=3, 
-            style_header=style_header, 
+            data=summed.to_dict('records'), page_size=4, 
+            style_header=style_header, is_focused=True,
             # editable=True, row_deletable=True, row_selectable=True, 
             export_format='csv', style_table={'overflowX': 'scroll'}
         )
-    ], width=8)
+    ], width=9)
     
     figures = [dbc.Col([
-        dcc.Graph(id=graph_id, style={'border':'1px solid black'}), 
+        dcc.Graph(
+            id=graph_id, 
+            style={'border':'1px solid white'}
+        ), 
         dcc.RadioItems(
             options=['Annotation On', 'Annotation Off'], 
             value='Annotation On', id=radio_id, 
@@ -104,88 +121,45 @@ def get_layout(factors, factor_labels, summed):
             # https://stackoverflow.com/questions/75692815/increase-space-between-text-and-icon-in-dash-checklist
             labelStyle= {"margin":"2px"},
             inputStyle={"margin": "5px"},
-            style={'margin':'auto', 'padding':'2px', 'align':'center'}
-        )], width=width, style={'margin':'auto', 'padding':'2px', 'align':'center', 'border':'1px solid black',})
+            style={'margin':'auto', 'padding':'5px', 'align':'center'}
+        )], width=width, style={'margin':'auto', 'padding':'0px', 'align':'center'}) # , 'border':'1px solid black'
     
         for graph_id, radio_id, width in [
-            ('time-series-chart', 'radio-time-series', 6), 
-            ('count-chart', 'radio-count-series', 4)]
+            ('time-series-chart', 'radio-time-series', 7), 
+            ('count-chart', 'radio-count-series', 5)]
     ]
     
     return html.Div([
         navbar,
         dbc.Row([
             html.H2('Financial Aid Predictive Analysis', style={'textAlign':'center', 'textColor':'blue', 'fontWeight':'bold'}),
-            dbc.Col([html.H4('Select Factors', style={'textAlign':'center'})] + [dcc.Dropdown(
-                        id=f"dropdown-{column}",
-                        options = values,value = values[0],
-                        clearable=True, searchable=True,style={'padding':'2px'}
-                        # persistence=True, persistence_type='local'
-                    ) for column, values in zip(factor_labels, factors)] ,
-                    style={'width': '5vw', 'margin-left':'10px', 'padding':'2px', 'border':'1px solid black'}),
-            ] + figures, 
-            style={'margin':'auto', 'padding':'2px'}  
-        ),
-        dbc.Row(aid_table),
-        dbc.Row(constraints_table)
-    ])
-    
-    return html.Div([
-        html.H3(
-            'Financial Aid Predictive Analysis', 
-            style={'textAlign':'center', 'textColor':'blue', 'fontWeight':'bold'}
-        ),
-        dbc.Row([
             dbc.Col([
-                # html.H3("Program:"),
+                html.H4('Select Factors', style={'textAlign':'left'})] + [
                 dcc.Dropdown(
                     id=f"dropdown-{column}",
                     options = values,value = values[0],
-                    clearable=True, searchable=True,
+                    clearable=True, searchable=True,style={'padding':'2px'}
                     # persistence=True, persistence_type='local'
-                ),
-            ])
-            for column, values in zip(factor_labels, factors)
-        ], style={'margin':'auto', 'padding':'2px'}),
-        dbc.Row([
+                ) for column, values in zip(factor_labels, factors)] + [
+                    html.Br(),
+                    dbc.Row([
+                        dbc.Col(html.H5('Prediction Length', style={'textAlign':'left', 'margin':'0px'}), width=9),
+                        dbc.Col(dcc.Input(id='pred-len', type='number', value=6, style={'width':'40px', 'align': 'center','margin':'0px'}))    
+                    ]),
+                ],
+                style={'padding':'2px', 'backgroundColor':background_color, 'border':'1px solid white'}, width=2
+            ),
             dbc.Col([
-                dcc.Graph(id=graph_id), 
-                dcc.RadioItems(
-                    options=['Annotation On', 'Annotation Off'], 
-                    value='Annotation On', id=radio_id, 
-                    inline=True, 
-                    # https://stackoverflow.com/questions/75692815/increase-space-between-text-and-icon-in-dash-checklist
-                    labelStyle= {"margin":"10px"},
-                    inputStyle={"margin": "10px"}
-                ),], width=width)
+                dbc.Row(figures, style={'border':'1px solid white'}), 
+                dbc.Row(aid_table, style={'border':'1px solid white'}),
+                dbc.Row(constraints_table, style={'border':'1px solid white'})
+            ], style={'backgroundColor':background_color})
             
-            for graph_id, radio_id, width in [
-                ('time-series-chart', 'radio-time-series', 7), 
-                ('count-chart', 'radio-count-series', 5)]
-            ], style={'margin':'auto', 'padding':'2px'}
+            ],
+            style={'margin':'0px', 'padding':'2px'}  
         ),
-        dbc.Row([
-            dbc.Col([
-                html.H3("Financial Aid Table:"),
-                # https://dash.plotly.com/datatable/style#styling-editable-columns
-                dash_table.DataTable(
-                    id='table', columns=[{'id':c, 'name':c} for c in summed.columns],
-                    data=summed.to_dict('records'), page_size=8, 
-                    style_header=style_header, 
-                    # editable=True, row_deletable=True, row_selectable=True, 
-                    export_format='csv', style_table={'overflowX': 'scroll'}
-                )
-            ])
-        ], style={'width': '65vw','margin':'auto', 'align':'center', 'padding':'10px'}),
-        dbc.Row([
-            dbc.Col(constraints_table)
-            # a dbc col to take start and end year as input, also the contraint value
-        ], style={
-            'width': '90vw','margin':'auto','align':'center', 
-            'padding':'5px', 'margin-bottom':'20px'
-        }),
-        html.H3('The End')
-    ], style={'width': '95vw','align':'center', 'margin':'auto', 'text-align': 'center'})
+        bottom_navbar
+    ])
 
 def improve_text_position(x):
     """ it is more efficient if the x values are sorted """
@@ -232,7 +206,7 @@ def draw_party_fig(years, data, annotate):
         xaxis_title='<b>Aid year</b>', 
         yaxis_title='<b>Count</b>',
         # hovermode='closest' # # Update the layout to show the coordinates
-        paper_bgcolor='lightblue', # #dadada
+        paper_bgcolor=background_color, # #dadada
         plot_bgcolor='lightblue',
     )
     party_fig.update_xaxes(showgrid=True, ticklabelmode="period")
@@ -321,7 +295,7 @@ def draw_main_fig(summed, predictions, annotate):
         title='<b>Aid Forecast. Model: ARIMA</b>',
         xaxis_title='<b>Aid year</b>',
         yaxis_title='<b>Offer balance</b>',
-        paper_bgcolor='lightblue', # #dadada
+        paper_bgcolor=background_color, # #dadada
         plot_bgcolor='lightblue',
         xaxis=dict(linewidth=2), yaxis=dict(linewidth=2)
     )
