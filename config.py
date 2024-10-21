@@ -49,4 +49,5 @@ log_file = 'myapp.log'
 # colors
 background_color = "lightblue"
 uva_color = '#232d4b'
+uva_orange = '#e57200'
 uva_header = '#dadada'

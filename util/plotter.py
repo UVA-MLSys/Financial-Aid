@@ -7,7 +7,7 @@ import os, pandas as pd
 
 def get_layout(factors, factor_labels, summed):
     style_header = {
-        'backgroundColor': 'rgb(128, 128, 128)',
+        'backgroundColor': uva_header,
         'fontWeight': 'bold',
         'textAlign': 'center'
     }
@@ -32,10 +32,10 @@ def get_layout(factors, factor_labels, summed):
         else: dash_columns.append({'id':c, 'name':c, 'type': 'numeric'})
     
     constraints_table = dbc.Col([
-        html.H3("Constraint Table"),
+        html.H3("Policy Table", style={'textColor':'blue', 'fontWeight':'bold', 'textAlign':'center'}),
         dash_table.DataTable(
             id='constraint-table', columns=dash_columns,
-            data=constraints.to_dict('records'), page_size=3, 
+            data=constraints.to_dict('records'), page_size=8, 
             style_header=style_header, 
             editable=True, row_deletable=True, 
             # row_selectable='multi',
@@ -66,7 +66,7 @@ def get_layout(factors, factor_labels, summed):
                             dbc.Col(html.Img(src='./assets/uva-logo-inline.png', height="40px")),
                             # dbc.Col(dbc.NavbarBrand("Navbar", className="ms-2")),
                         ],
-                        align="center"
+                        # align="left"
                     ),
                     href="https://sfs.virginia.edu",
                     style={'margin':'8px'},
@@ -74,6 +74,7 @@ def get_layout(factors, factor_labels, summed):
             ]
         ),
         color=uva_color,
+        style={'backgroundColor':uva_color, 'align': 'left'},
         dark=True,
     )
     
@@ -84,30 +85,120 @@ def get_layout(factors, factor_labels, summed):
                     # Use row and col to control vertical alignment of logo / brand
                     dbc.Row(
                         [
-                            dbc.Col(html.Img(src='./assets/uva-logo-footer-white.png', height="75px"))
+                            dbc.Col(html.Img(src='./assets/uva-logo-footer-white.png', height="90px")),
+                            
+                            dbc.Col(html.H6('Phone hours')),
                         ],
-                        align="center"
+                        style={'margin':'auto', 'padding':'2px', 'align':'left', 'fontColor':'white'},
                     ),
-                    href="https://sfs.virginia.edu",
-                    style={'margin':'8px'},
+                ),
+                html.A(
+                    dbc.Col([
+                    dbc.Row(html.H6(row))
+                        for row in [
+                        "Student Financial Services",
+                        "1001 North Emmet Street (map)",
+                        "P. O. Box 400204",
+                        "Charlottesville, VA 22904-420"
+                    ]]),
+                ),
+                html.A(
+                    dbc.Col(
+                        [dbc.Row(html.H6(row)) for row in [
+                            'PHONE: 800-692-7753',
+                            'FAX: 540-227-2000',
+                            "EMAIL: sfs@virginia.edu"
+                            "",
+                            "Contact Us",
+                            "Staff and Faculty Resources",
+                        ]]
+                    )
+                ),
+                html.A(
+                    dbc.Row(
+                        html.H6("© 2024, University of Virginia"),
+                    )
                 )
             ]
         ),
         color=uva_color,
-        dark=True,
+        dark=True, style={'fontColor':'white'},
     )
     
+    bottom_navbars = [
+        dbc.Row([
+            dbc.Col(
+                html.Img(src='./assets/uva-logo-footer-white.png', height="90px")
+            ),
+            dbc.Col(
+                [dbc.Row(row) for row in ["Student Financial Services",
+                        "1001 North Emmet Street (map)",
+                        "P. O. Box 400204",
+                        "Charlottesville, VA 22904-420"]]
+            ),
+            dbc.Col(
+                [dbc.Row(row) for row in [
+                    'PHONE: 434-982-6000',
+                    "EMAIL: sfs@virginia.edu",
+                    html.Br(),
+                    html.A(
+                        "Contact Us", href='https://sfs.virginia.edu/contact-us', 
+                        style={'color':'white'}
+                    ), html.Br(),
+                    "Staff and Faculty Resources"
+                ]]
+            ),
+            dbc.Col([
+                dbc.Row(row) for row in [
+                    'Phone hours',
+                    'Weekdays: 10-noon and 1-4',
+                    'X', 'Facebook', 'Instagram'
+                    # [html.Img(src='./assets/twitter-white.png', height=3, width=3), 'X'],
+                    # [html.Img(src='./assets/facebook-white.png', style={'block':'inline', 'height':'10px'}), 'Facebook'],
+                    # [html.Img(src='./assets/instagram-white.png', height="10px", width="10px"), 'Instagram']
+                ]
+            ])
+            ],
+            style={'color':'white', 'backgroundColor':uva_color, 'padding': '25px'},
+        ), 
+        dbc.Row(
+            dbc.Col([
+                html.A(
+                    'Notice of Non-Discrimination and Equal Opportunity', 
+                    href='http://eocr.virginia.edu/notice-non-discrimination-and-equal-opportunity',
+                    style={'color':'white'}
+                ), " | ",
+                html.A(
+                    "Report a Barrier", href='http://reportabarrier.virginia.edu/', 
+                    style={'color':'white'} 
+                )," | ",
+                html.A(
+                    "Privacy Policy", href='http://www.virginia.edu/siteinfo/privacy/', 
+                    style={'color':'white'}
+                ) ," | ",
+                html.A(
+                    "Emergency Relief Reporting", href='https://sfs.virginia.edu/emergency-federal-relief-funds', 
+                    style={'color':'white'}
+                )
+            ], width=12)
+            ,style={'color':'white', 'backgroundColor':uva_color, 'padding': '15px', 'textAlign':'center'}
+        ),
+        dbc.Row(
+            html.H6('© 2024 By the Rector and Visitors of the University of Virginia'),
+            style={'color':'white', 'backgroundColor':uva_color, 'padding': '0px', 'textAlign':'center'})
+    ]
+    
     aid_table = dbc.Col([
-        html.H3("Financial Aid Table:"),
+        html.H3("Financial Aid Table", style={'textColor':uva_color, 'fontWeight':'bold', 'textAlign':'center'}),
         # https://dash.plotly.com/datatable/style#styling-editable-columns
         dash_table.DataTable(
             id='table', columns=[{'id':c, 'name':c} for c in summed.columns],
-            data=summed.to_dict('records'), page_size=4, 
+            data=summed.to_dict('records'), page_size=8, 
             style_header=style_header, is_focused=True,
             # editable=True, row_deletable=True, row_selectable=True, 
             export_format='csv', style_table={'overflowX': 'scroll'}
         )
-    ], width=9)
+    ])
     
     figures = [dbc.Col([
         dcc.Graph(
@@ -131,35 +222,35 @@ def get_layout(factors, factor_labels, summed):
     
     return html.Div([
         navbar,
-        dbc.Row([
-            html.H2('Financial Aid Predictive Analysis', style={'textAlign':'center', 'textColor':'blue', 'fontWeight':'bold'}),
-            dbc.Col([
-                html.H4('Select Factors', style={'textAlign':'left'})] + [
-                dcc.Dropdown(
-                    id=f"dropdown-{column}",
-                    options = values,value = values[0],
-                    clearable=True, searchable=True,style={'padding':'2px'}
-                    # persistence=True, persistence_type='local'
-                ) for column, values in zip(factor_labels, factors)] + [
-                    html.Br(),
-                    dbc.Row([
-                        dbc.Col(html.H5('Prediction Length', style={'textAlign':'left', 'margin':'0px'}), width=9),
-                        dbc.Col(dcc.Input(id='pred-len', type='number', value=6, style={'width':'40px', 'align': 'center','margin':'0px'}))    
-                    ]),
-                ],
-                style={'padding':'2px', 'backgroundColor':background_color, 'border':'1px solid white'}, width=2
-            ),
-            dbc.Col([
-                dbc.Row(figures, style={'border':'1px solid white'}), 
-                dbc.Row(aid_table, style={'border':'1px solid white'}),
-                dbc.Row(constraints_table, style={'border':'1px solid white'})
-            ], style={'backgroundColor':background_color})
-            
-            ],
-            style={'margin':'0px', 'padding':'2px'}  
+        dbc.Row(
+            dbc.Col(
+                html.H2('Financial Aid Predictive Analysis', 
+                    style={'textAlign':'center', 'textColor':uva_color, 'fontWeight':'bold', 'padding':'8px', 'margin':'40px'}
+                )
+            )
         ),
-        bottom_navbar
-    ])
+        dbc.Row(
+            [dbc.Col(dcc.Dropdown(
+                        id=f"dropdown-{column}",
+                        options = values,value = values[0],
+                        clearable=True, searchable=True
+                        # persistence=True, persistence_type='local'
+                    )) for column, values in zip(factor_labels, factors)]
+            # + [
+            #     dbc.Col(html.H5('Prediction Length')),
+            #     dbc.Col(dcc.Input(id='pred-len', type='number', value=6, style={'width':'35px'})),
+            # ]
+            ,
+            style={
+                'padding':'10px', 'backgroundColor':uva_header, 
+                'margin':'5px', 'align':'center', 
+                'textColor':uva_color, 'fontWeight':'bold'
+            }
+        ),
+        dbc.Row(figures, style={'margin':'10px', 'marginBottom':'70px'}), 
+        dbc.Row(aid_table, style={'margin':'10px', 'marginBottom':'70px', 'align':'center'}),
+        dbc.Row(constraints_table, style={'margin':'10px', 'marginBottom':'80px', 'align':'center'})
+    ]+bottom_navbars)
 
 def improve_text_position(x):
     """ it is more efficient if the x values are sorted """
@@ -206,8 +297,8 @@ def draw_party_fig(years, data, annotate):
         xaxis_title='<b>Aid year</b>', 
         yaxis_title='<b>Count</b>',
         # hovermode='closest' # # Update the layout to show the coordinates
-        paper_bgcolor=background_color, # #dadada
-        plot_bgcolor='lightblue',
+        # paper_bgcolor=background_color, # #dadada
+        # plot_bgcolor='lightblue',
     )
     party_fig.update_xaxes(showgrid=True, ticklabelmode="period")
     party_fig.update_traces(marker_size=marker_size)
@@ -295,8 +386,8 @@ def draw_main_fig(summed, predictions, annotate):
         title='<b>Aid Forecast. Model: ARIMA</b>',
         xaxis_title='<b>Aid year</b>',
         yaxis_title='<b>Offer balance</b>',
-        paper_bgcolor=background_color, # #dadada
-        plot_bgcolor='lightblue',
+        # paper_bgcolor=background_color, # #dadada
+        # plot_bgcolor='lightblue',
         xaxis=dict(linewidth=2), yaxis=dict(linewidth=2)
     )
     # fig.update_yaxes(title_font_color="red")

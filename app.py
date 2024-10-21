@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 logger.info('Started')
 
 # data input
-df = pd.read_csv(data_root + 'Merged2.csv')
+df = pd.read_csv(data_root + 'Merged.csv')
 for col in ['FUNDED_PARTY', 'TOTAL_PARTY']:
     df[col] = pd.to_numeric(df[col], errors='coerce').astype('Int64')
 
@@ -99,13 +99,13 @@ callbacks = [
 ] + [Input('constraint-table', 'data_timestamp'),
     State('constraint-table', 'data'),
     # State('constraint-table', 'columns')
-] + [Input('pred-len', 'value')]
+]
 @app.callback(callbacks)
 def update_data(
     level, program_desc, academic_plan, 
     report_category, report_code, need_based, residency,
     radio_time, radio_count,
-    timestamp, constraint_data, pred_len
+    timestamp, constraint_data
 ):
     dis = filter_disbursement(
         df, level, program_desc, academic_plan, 
@@ -199,7 +199,7 @@ if __name__ == '__main__':
         '--host', type=str, default='127.0.0.1', 
         help='Host address. Should be 0.0.0.0 if running on AWS, 127.0.0.1 if running locally.'
     )
-    parser.add_argument('--port', type=int, default=80) # default 80 for http, 443 for https
+    parser.add_argument('--port', type=int, default=8050) # default 80 for http, 443 for https
     parser.add_argument('--log_file', type=str, default=None)
     args = parser.parse_args()
     
