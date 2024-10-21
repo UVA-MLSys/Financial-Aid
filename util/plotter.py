@@ -32,7 +32,7 @@ def get_layout(factors, factor_labels, summed):
         else: dash_columns.append({'id':c, 'name':c, 'type': 'numeric'})
     
     constraints_table = dbc.Col([
-        html.H3("Policy Table", style={'textColor':'blue', 'fontWeight':'bold', 'textAlign':'center'}),
+        html.H2("Policy Table", style={'textColor':uva_font, 'fontWeight':'bold', 'textAlign':'center'}),
         dash_table.DataTable(
             id='constraint-table', columns=dash_columns,
             data=constraints.to_dict('records'), page_size=8, 
@@ -52,9 +52,15 @@ def get_layout(factors, factor_labels, summed):
             }
         ),
         # html.Div(id='dropdown_per_row_container'),
-        html.H3(),
+        html.H2(),
         html.Button('Add Row', id='editing-rows-button', n_clicks=0),
     ])
+    
+    top_navbar = dbc.Navbar(
+        color=uva_orange,
+        style={'backgroundColor':uva_orange, 'margin':'0px', 'padding':'4px'},
+        dark=True,
+    )
     
     navbar = dbc.Navbar(
         dbc.Container(
@@ -76,53 +82,6 @@ def get_layout(factors, factor_labels, summed):
         color=uva_color,
         style={'backgroundColor':uva_color, 'align': 'left'},
         dark=True,
-    )
-    
-    bottom_navbar = dbc.Navbar(
-        dbc.Container(
-            [
-                html.A(
-                    # Use row and col to control vertical alignment of logo / brand
-                    dbc.Row(
-                        [
-                            dbc.Col(html.Img(src='./assets/uva-logo-footer-white.png', height="90px")),
-                            
-                            dbc.Col(html.H6('Phone hours')),
-                        ],
-                        style={'margin':'auto', 'padding':'2px', 'align':'left', 'fontColor':'white'},
-                    ),
-                ),
-                html.A(
-                    dbc.Col([
-                    dbc.Row(html.H6(row))
-                        for row in [
-                        "Student Financial Services",
-                        "1001 North Emmet Street (map)",
-                        "P. O. Box 400204",
-                        "Charlottesville, VA 22904-420"
-                    ]]),
-                ),
-                html.A(
-                    dbc.Col(
-                        [dbc.Row(html.H6(row)) for row in [
-                            'PHONE: 800-692-7753',
-                            'FAX: 540-227-2000',
-                            "EMAIL: sfs@virginia.edu"
-                            "",
-                            "Contact Us",
-                            "Staff and Faculty Resources",
-                        ]]
-                    )
-                ),
-                html.A(
-                    dbc.Row(
-                        html.H6("© 2024, University of Virginia"),
-                    )
-                )
-            ]
-        ),
-        color=uva_color,
-        dark=True, style={'fontColor':'white'},
     )
     
     bottom_navbars = [
@@ -189,7 +148,10 @@ def get_layout(factors, factor_labels, summed):
     ]
     
     aid_table = dbc.Col([
-        html.H3("Financial Aid Table", style={'textColor':uva_color, 'fontWeight':'bold', 'textAlign':'center'}),
+        html.H2(
+            "Financial Aid Table", 
+            style={'textColor':uva_font, 'fontWeight':'bold', 'textAlign':'center'}
+        ),
         # https://dash.plotly.com/datatable/style#styling-editable-columns
         dash_table.DataTable(
             id='table', columns=[{'id':c, 'name':c} for c in summed.columns],
@@ -201,19 +163,16 @@ def get_layout(factors, factor_labels, summed):
     ])
     
     figures = [dbc.Col([
-        dcc.Graph(
-            id=graph_id, 
-            style={'border':'1px solid white'}
-        ), 
+        dcc.Graph(id=graph_id), 
         dcc.RadioItems(
             options=['Annotation On', 'Annotation Off'], 
             value='Annotation On', id=radio_id, 
             inline=True, 
             # https://stackoverflow.com/questions/75692815/increase-space-between-text-and-icon-in-dash-checklist
-            labelStyle= {"margin":"2px"},
+            labelStyle= {"margin":"15px"},
             inputStyle={"margin": "5px"},
-            style={'margin':'auto', 'padding':'5px', 'align':'center'}
-        )], width=width, style={'margin':'auto', 'padding':'0px', 'align':'center'}) # , 'border':'1px solid black'
+            style={'margin':'auto', 'padding':'2px'}
+        )], width=width, style={'margin':'auto', 'padding':'0px', 'textAlign':'center'}) # , 'border':'1px solid black'
     
         for graph_id, radio_id, width in [
             ('time-series-chart', 'radio-time-series', 7), 
@@ -221,11 +180,11 @@ def get_layout(factors, factor_labels, summed):
     ]
     
     return html.Div([
-        navbar,
+        top_navbar,navbar,
         dbc.Row(
             dbc.Col(
-                html.H2('Financial Aid Predictive Analysis', 
-                    style={'textAlign':'center', 'textColor':uva_color, 'fontWeight':'bold', 'padding':'8px', 'margin':'40px'}
+                html.H1('Financial Aid Predictive Analysis', 
+                    style={'textAlign':'center', 'textColor':uva_font, 'fontWeight':'bold', 'padding':'8px', 'margin':'30px'}
                 )
             )
         ),
@@ -233,7 +192,9 @@ def get_layout(factors, factor_labels, summed):
             [dbc.Col(dcc.Dropdown(
                         id=f"dropdown-{column}",
                         options = values,value = values[0],
-                        clearable=True, searchable=True
+                        # clearable=True, 
+                        searchable=True, 
+                        style={'backgroundColor':uva_header, 'border':'0px'},
                         # persistence=True, persistence_type='local'
                     )) for column, values in zip(factor_labels, factors)]
             # + [
@@ -242,9 +203,9 @@ def get_layout(factors, factor_labels, summed):
             # ]
             ,
             style={
-                'padding':'10px', 'backgroundColor':uva_header, 
+                'padding':'5px', 'backgroundColor':uva_header, 
                 'margin':'5px', 'align':'center', 
-                'textColor':uva_color, 'fontWeight':'bold'
+                'textColor':uva_font, 'fontWeight':'bold'
             }
         ),
         dbc.Row(figures, style={'margin':'10px', 'marginBottom':'70px'}), 
