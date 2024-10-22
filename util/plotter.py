@@ -18,7 +18,7 @@ def get_constraints(filename='constraints.csv'):
         )
     return constraints
 
-def get_contraints_table(constraints, style_header, factors):
+def get_contraints_table(constraints, factors):
     dash_columns = []
     for index, c in enumerate(constraints.columns):
         if c not in ['Start', 'End', 'Amount']: 
@@ -121,7 +121,7 @@ def get_layout(factors, factor_labels, summed):
     # get constraints table
     constraints = get_constraints(filename='constraints.csv')
     constraints_table = get_contraints_table(
-        constraints, style_header, factors
+        constraints, factors
     )
     
     top_navbar = dbc.Navbar(
@@ -197,13 +197,13 @@ def get_layout(factors, factor_labels, summed):
         ),
         dbc.Row(
             [dbc.Col(dcc.Dropdown(
-                        id=f"dropdown-{column}",
-                        options = values,value = values[0],
-                        # clearable=True, 
-                        searchable=True, 
-                        style={'backgroundColor':uva_header, 'border':'0px'},
-                        # persistence=True, persistence_type='local'
-                    )) for column, values in zip(factor_labels, factors)]
+                id=f"dropdown-{column}",
+                options = values, value = values[0],
+                # clearable=True, 
+                searchable=True, 
+                style={'backgroundColor':uva_header, 'border':'0px'},
+                # persistence=True, persistence_type='local'
+            )) for column, values in zip(factor_labels, factors)]
             # + [
             #     dbc.Col(html.H5('Prediction Length')),
             #     dbc.Col(dcc.Input(id='pred-len', type='number', value=6, style={'width':'35px'})),

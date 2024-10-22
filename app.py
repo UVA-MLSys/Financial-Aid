@@ -172,7 +172,27 @@ def update_data(
 def add_row(n_clicks, rows, columns):
     if n_clicks == 0: return rows
     
-    rows.append({c['id']: '' for c in columns})
+    # 'Program', 'Level', 'Plan', 'Access', 'Report',
+    # 'Need Based', 'Residency','Start', 'End', 'Amount'
+    column_mapping = {
+        'Program': 'ACADEMIC_PROGRAM_DESC',
+        'Level': 'ACADEMIC_LEVEL_TERM_START',
+        'Plan': 'ACADEMIC_PLAN',
+        'Access': 'UVA_ACCESS',
+        'Report': 'REPORT_CODE',
+        'Need Based': 'Need based',
+        'Residency': 'FIN_AID_FED_RES'
+    }
+    
+    new_row = {}
+    for col in columns:
+        column = col['id']
+        if column in column_mapping:
+            new_row[column] = default_values[column_mapping[column]]
+        else: new_row[column] = ''
+    
+    if rows is None: rows = []
+    rows.append(new_row)
     return rows
 
 # update the table only if valid input and then cache it

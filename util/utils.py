@@ -49,8 +49,8 @@ def limit_predictions(predictions, keys, constraints):
     # no valid points found
     if constraints.shape[0] == 0: return predictions
     
-    common_columns = [col for col in constraints if constraints[col].dtype=='object']
-    for index, col in enumerate(common_columns):
+    # the first seven factors are common only
+    for index, col in enumerate(constraints.columns[:7]):
         constraints = constraints[constraints[col] == keys[index]]
         if constraints.shape[0] == 0:
             # print(f'No constraints for {col}: {keys[index]}')
