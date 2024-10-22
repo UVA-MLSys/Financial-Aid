@@ -5,16 +5,9 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 import os, pandas as pd
 
-def get_layout(factors, factor_labels, summed):
-    style_header = {
-        'backgroundColor': uva_header,
-        'fontWeight': 'bold',
-        'textAlign': 'center'
-    }
-    
-    # get constraints table
-    if os.path.exists(data_root + 'constraints.csv'):
-        constraints = pd.read_csv(data_root + 'constraints.csv')
+def get_constraints(filename='constraints.csv'):
+    if os.path.exists(data_root + filename):
+        constraints = pd.read_csv(data_root + filename)
         # constraints['amount'] = constraints['amount'].apply(numerize, args=(1, ))
     else:
         # print('No constraints.csv found. Creating a new one...')
@@ -23,8 +16,9 @@ def get_layout(factors, factor_labels, summed):
                 'Program', 'Level', 'Plan', 'Access', 'Report',
                 'Need Based', 'Residency','Start', 'End', 'Amount']
         )
-        # print(constraints)
-        
+    return constraints
+
+def get_contraints_table(constraints, style_header, factors):
     dash_columns = []
     for index, c in enumerate(constraints.columns):
         if c not in ['Start', 'End', 'Amount']: 
@@ -56,35 +50,10 @@ def get_layout(factors, factor_labels, summed):
         html.Button('Add Row', id='editing-rows-button', n_clicks=0),
     ])
     
-    top_navbar = dbc.Navbar(
-        color=uva_orange,
-        style={'backgroundColor':uva_orange, 'margin':'0px', 'padding':'4px'},
-        dark=True,
-    )
-    
-    navbar = dbc.Navbar(
-        dbc.Container(
-            [
-                html.A(
-                    # Use row and col to control vertical alignment of logo / brand
-                    dbc.Row(
-                        [
-                            dbc.Col(html.Img(src='./assets/uva-logo-inline.png', height="40px")),
-                            # dbc.Col(dbc.NavbarBrand("Navbar", className="ms-2")),
-                        ],
-                        # align="left"
-                    ),
-                    href="https://sfs.virginia.edu",
-                    style={'margin':'8px'},
-                )
-            ]
-        ),
-        color=uva_color,
-        style={'backgroundColor':uva_color, 'align': 'left'},
-        dark=True,
-    )
-    
-    bottom_navbars = [
+    return constraints_table
+
+def get_bottom_navbar():
+    return [
         dbc.Row([
             dbc.Col(
                 html.Img(src='./assets/uva-logo-footer-white.png', height="90px")
@@ -146,6 +115,44 @@ def get_layout(factors, factor_labels, summed):
             html.H6('© 2024 By the Rector and Visitors of the University of Virginia'),
             style={'color':'white', 'backgroundColor':uva_color, 'padding': '0px', 'textAlign':'center'})
     ]
+    
+
+def get_layout(factors, factor_labels, summed):    
+    # get constraints table
+    constraints = get_constraints(filename='constraints.csv')
+    constraints_table = get_contraints_table(
+        constraints, style_header, factors
+    )
+    
+    top_navbar = dbc.Navbar(
+        color=uva_orange,
+        style={'backgroundColor':uva_orange, 'margin':'0px', 'padding':'4px'},
+        dark=True,
+    )
+    
+    navbar = dbc.Navbar(
+        dbc.Container(
+            [
+                html.A(
+                    # Use row and col to control vertical alignment of logo / brand
+                    dbc.Row(
+                        [
+                            dbc.Col(html.Img(src='./assets/uva-logo-inline.png', height="40px")),
+                            # dbc.Col(dbc.NavbarBrand("Navbar", className="ms-2")),
+                        ],
+                        # align="left"
+                    ),
+                    href="https://sfs.virginia.edu",
+                    style={'margin':'8px'},
+                )
+            ]
+        ),
+        color=uva_color,
+        style={'backgroundColor':uva_color, 'align': 'left'},
+        dark=True,
+    )
+    
+    bottom_navbars = get_bottom_navbar()
     
     aid_table = dbc.Col([
         html.H2(

@@ -10,3 +10,4 @@ plotly
 scikit-learn
 statsmodels
 tqdm
+gdown
