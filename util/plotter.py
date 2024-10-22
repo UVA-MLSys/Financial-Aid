@@ -56,7 +56,7 @@ def get_bottom_navbar():
     return [
         dbc.Row([
             dbc.Col(
-                html.Img(src='./assets/uva-logo-footer-white.png', height="90px")
+                html.Img(src='./assets/uva-logo-footer-white.png', height="90px", style={'paddingLeft':padding})
             ),
             dbc.Col(
                 [dbc.Row(row) for row in ["Student Financial Services",
@@ -71,23 +71,36 @@ def get_bottom_navbar():
                     html.Br(),
                     html.A(
                         "Contact Us", href='https://sfs.virginia.edu/contact-us', 
-                        style={'color':'white'}
+                        style={'color':'white', 'padding':'0px'}
                     ), html.Br(),
-                    "Staff and Faculty Resources"
+                    html.A(
+                        "Staff and Faculty Resources", href='https://sfs.virginia.edu/sfresources', 
+                        style={'color':'white', 'padding':'0px'}
+                    )
                 ]]
             ),
             dbc.Col([
                 dbc.Row(row) for row in [
                     'Phone hours',
                     'Weekdays: 10-noon and 1-4',
-                    'X', 'Facebook', 'Instagram'
+                    html.A(
+                        "X", href='https://twitter.com/UVASFS', 
+                        style={'color':'white', 'padding':'0px'}
+                    ),
+                    html.A(
+                        'Facebook', href='https://www.facebook.com/UVASFS/', 
+                        style={'color':'white', 'padding':'0px'}
+                    ), html.A(
+                        'Instagram', href='https://www.instagram.com/uvasfs/?hl=en', 
+                        style={'color':'white', 'padding':'0px'}
+                    ),
                     # [html.Img(src='./assets/twitter-white.png', height=3, width=3), 'X'],
                     # [html.Img(src='./assets/facebook-white.png', style={'block':'inline', 'height':'10px'}), 'Facebook'],
                     # [html.Img(src='./assets/instagram-white.png', height="10px", width="10px"), 'Instagram']
                 ]
             ])
             ],
-            style={'color':'white', 'backgroundColor':uva_color, 'padding': '25px'},
+            style={'color':'white', 'backgroundColor':uva_color, 'padding': '10px', 'fontSize':'0.86em'},
         ), 
         dbc.Row(
             dbc.Col([
@@ -109,21 +122,21 @@ def get_bottom_navbar():
                     style={'color':'white'}
                 )
             ], width=12)
-            ,style={'color':'white', 'backgroundColor':uva_color, 'padding': '15px', 'textAlign':'center'}
+            , style={
+                'color':'white', 'backgroundColor':uva_color, 
+                'padding': '15px', 'textAlign':'center', 'fontSize':'0.86em'
+            }
         ),
         dbc.Row(
-            html.H6('© 2024 By the Rector and Visitors of the University of Virginia'),
-            style={'color':'white', 'backgroundColor':uva_color, 'padding': '0px', 'textAlign':'center'})
+            html.A('© 2024 By the Rector and Visitors of the University of Virginia'),
+            style={
+                'color':'white', 'backgroundColor':uva_color, 
+                'padding': '0px', 'textAlign':'center', 'fontSize':'0.86em'
+            })
     ]
     
 
 def get_layout(factors, factor_labels, summed):    
-    # get constraints table
-    constraints = get_constraints(filename='constraints.csv')
-    constraints_table = get_contraints_table(
-        constraints, factors
-    )
-    
     top_navbar = dbc.Navbar(
         color=uva_orange,
         style={'backgroundColor':uva_orange, 'margin':'0px', 'padding':'4px'},
@@ -152,23 +165,6 @@ def get_layout(factors, factor_labels, summed):
         dark=True,
     )
     
-    bottom_navbars = get_bottom_navbar()
-    
-    aid_table = dbc.Col([
-        html.H2(
-            "Financial Aid Table", 
-            style={'textColor':uva_font, 'fontWeight':'bold', 'textAlign':'center'}
-        ),
-        # https://dash.plotly.com/datatable/style#styling-editable-columns
-        dash_table.DataTable(
-            id='table', columns=[{'id':c, 'name':c} for c in summed.columns],
-            data=summed.to_dict('records'), page_size=8, 
-            style_header=style_header, is_focused=True,
-            # editable=True, row_deletable=True, row_selectable=True, 
-            export_format='csv', style_table={'overflowX': 'scroll'}
-        )
-    ])
-    
     figures = [dbc.Col([
         dcc.Graph(id=graph_id), 
         dcc.RadioItems(
@@ -186,15 +182,52 @@ def get_layout(factors, factor_labels, summed):
             ('count-chart', 'radio-count-series', 5)]
     ]
     
-    return html.Div([
-        top_navbar,navbar,
-        dbc.Row(
-            dbc.Col(
-                html.H1('Financial Aid Predictive Analysis', 
-                    style={'textAlign':'center', 'textColor':uva_font, 'fontWeight':'bold', 'padding':'8px', 'margin':'30px'}
-                )
-            )
+    aid_table = dbc.Col([
+        html.H2(
+            "Financial Aid Table", 
+            style={'textColor':uva_font, 'fontWeight':'bold', 'textAlign':'center'}
         ),
+        # https://dash.plotly.com/datatable/style#styling-editable-columns
+        dash_table.DataTable(
+            id='table', columns=[{'id':c, 'name':c} for c in summed.columns],
+            data=summed.to_dict('records'), page_size=8, 
+            style_header=style_header, is_focused=True,
+            # editable=True, row_deletable=True, row_selectable=True, 
+            export_format='csv', style_table={'overflowX': 'scroll'}
+        )
+    ])
+    
+    # get constraints table
+    constraints = get_constraints(filename='constraints.csv')
+    constraints_table = get_contraints_table(
+        constraints, factors
+    )
+    
+    return html.Div([
+        top_navbar, navbar,
+        dbc.Row([
+            dbc.Col(
+                html.H1('Student Financial Aid Prediction', 
+                    style={
+                        'textAlign':'left', 'textColor':uva_font, 
+                        'fontWeight':'bold','marginRight': '0px'
+                    }
+                )
+            ), 
+            dbc.Col([
+                html.A('PAY ONLINE', href='https://virginia.myonplanu.com/login', style={'color':uva_font, 'padding':'0px','textDecoration':'none'}),
+                html.A(' / ', style={'color': uva_orange}), 
+                html.A('SIS LOGIN', href='https://sisuva.admin.virginia.edu/ihprd/signon.html', style={'color':uva_font, 'padding':'0px','textDecoration':'none'}), 
+                html.A(' / ', style={'color': uva_orange}), 
+                html.A('ESTIMATE COSTS', href='https://sfs.virginia.edu/estimate-your-costs-attend-uva', style={'color':uva_font, 'padding':'0px','textDecoration':'none'})
+                ], style={
+                    'textAlign': 'right', 
+                    'textColor':uva_font, 'marginLeft': '0px', 
+                    'fontWeight':'bold',
+                    'fontSize':'0.9em'
+                }
+            ),
+        ], style={'margin': page_margin}),
         dbc.Row(
             [dbc.Col(dcc.Dropdown(
                 id=f"dropdown-{column}",
@@ -212,13 +245,14 @@ def get_layout(factors, factor_labels, summed):
             style={
                 'padding':'5px', 'backgroundColor':uva_header, 
                 'margin':'5px', 'align':'center', 
-                'textColor':uva_font, 'fontWeight':'bold'
+                'textColor':uva_font, 'fontWeight':'bold',
+                'padding-left': padding, 'padding-right': padding
             }
         ),
-        dbc.Row(figures, style={'margin':'10px', 'marginBottom':'70px'}), 
-        dbc.Row(aid_table, style={'margin':'10px', 'marginBottom':'70px', 'align':'center'}),
-        dbc.Row(constraints_table, style={'margin':'10px', 'marginBottom':'80px', 'align':'center'})
-    ]+bottom_navbars)
+        dbc.Row(figures, style={'margin':page_margin}), 
+        dbc.Row(aid_table, style={'margin':page_margin, 'align':'center'}),
+        dbc.Row(constraints_table, style={'margin':page_margin,'align':'center'})
+    ] + get_bottom_navbar())
 
 def improve_text_position(x):
     """ it is more efficient if the x values are sorted """

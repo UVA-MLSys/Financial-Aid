@@ -43,6 +43,10 @@ pred_len = 6
 marker_size = 10
 fontsize = 12
 
+# top right bottom left
+padding = '6vw'
+page_margin = '3vw 6vw 3vw 6vw'
+
 # logging will be saved in data_root folder
 log_file = 'myapp.log'
 
