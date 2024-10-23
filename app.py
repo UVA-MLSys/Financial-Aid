@@ -95,7 +95,6 @@ callbacks = [
 ] + [Input(f"dropdown-{value}", "value") for value in [
         'academic-level', 'program-desc', 'academic-plan', 
         'report-category', 'report-code', 'need-based', 'residency']
-] + [Input('radio-time-series', 'value'), Input('radio-count-series', 'value')
 ] + [Input('constraint-table', 'data_timestamp'),
     State('constraint-table', 'data'),
     # State('constraint-table', 'columns')
@@ -104,7 +103,6 @@ callbacks = [
 def update_data(
     level, program_desc, academic_plan, 
     report_category, report_code, need_based, residency,
-    radio_time, radio_count,
     timestamp, constraint_data
 ):
     dis = filter_disbursement(
@@ -122,7 +120,7 @@ def update_data(
     count_df['TOTAL_PARTY'] = dis.groupby(
         time_column
     )['TOTAL_PARTY'].sum().values
-    party_fig = draw_party_fig(years, count_df, radio_count)
+    party_fig = draw_party_fig(years, count_df)
     
     predictions = {
         'PREDICTED_MEAN': [], time_column:[],
@@ -147,7 +145,7 @@ def update_data(
         ) 
     predictions = pd.DataFrame(predictions)
     
-    fig = draw_main_fig(summed, predictions, radio_time)
+    fig = draw_main_fig(summed, predictions)
     
     summed = summed.merge(count_df, on=time_column)
     summed = summed.merge(predictions, on=time_column, how='outer')

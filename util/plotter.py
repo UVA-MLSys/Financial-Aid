@@ -165,21 +165,15 @@ def get_layout(factors, factor_labels, summed):
         dark=True,
     )
     
-    figures = [dbc.Col([
-        dcc.Graph(id=graph_id), 
-        dcc.RadioItems(
-            options=['Annotation On', 'Annotation Off'], 
-            value='Annotation On', id=radio_id, 
-            inline=True, 
-            # https://stackoverflow.com/questions/75692815/increase-space-between-text-and-icon-in-dash-checklist
-            labelStyle= {"margin":"15px"},
-            inputStyle={"margin": "5px"},
-            style={'margin':'auto', 'padding':'2px'}
-        )], width=width, style={'margin':'auto', 'padding':'0px', 'textAlign':'center'}) # , 'border':'1px solid black'
+    figures = [dbc.Col(
+        dcc.Graph(id=graph_id)
+        , width=width, style={
+            'margin':'auto', 'padding':'0px', 'textAlign':'center'
+        }) # , 'border':'1px solid black'
     
-        for graph_id, radio_id, width in [
-            ('time-series-chart', 'radio-time-series', 7), 
-            ('count-chart', 'radio-count-series', 5)]
+        for graph_id, width in [
+            ('time-series-chart', 7), 
+            ('count-chart', 5)]
     ]
     
     aid_table = dbc.Col([
@@ -260,31 +254,21 @@ def improve_text_position(x):
     positions = ['top center', 'bottom center']  # you can add more: left center ...
     return [positions[i % len(positions)] for i in range(len(x))]
 
-def draw_party_fig(years, data, annotate):
+def draw_party_fig(years, data):
     party_fig = go.Figure()
     
     for (name, column) in [('Funded', 'FUNDED_PARTY'), ('All', 'TOTAL_PARTY')]:
-        if annotate == 'Annotation On':
-            party_fig.add_trace(go.Scatter(
-                name=name,
-                mode="markers+lines+text", 
-                x=years, y=data[column],
-                text=data[column].apply(numerize, args=(1, )),
-                # texttemplate = "%{y}", # "(%{x:.4g}, %{y:.4g})",
-                textposition=improve_text_position(years), # 'bottom center',
-                marker_symbol="circle", 
-                line_color=obs_color,
-                line=dict(width=line_width)
-            ))
-        else:
-            party_fig.add_trace(go.Scatter(
-                name=name,
-                mode="markers+lines", 
-                x=years, y=data[column],
-                marker_symbol="circle", 
-                line_color=obs_color,
-                line=dict(width=line_width)
-            ))
+        party_fig.add_trace(go.Scatter(
+            name=name,
+            mode="markers+lines+text", 
+            x=years, y=data[column],
+            text=data[column].apply(numerize, args=(1, )),
+            # texttemplate = "%{y}", # "(%{x:.4g}, %{y:.4g})",
+            textposition=improve_text_position(years), # 'bottom center',
+            marker_symbol="circle", 
+            line_color=obs_color,
+            line=dict(width=line_width)
+        ))
 
     party_fig.update_layout(
         font=dict(
@@ -308,7 +292,7 @@ def draw_party_fig(years, data, annotate):
     
     return party_fig
     
-def draw_main_fig(summed, predictions, annotate):
+def draw_main_fig(summed, predictions):
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         name="Ground Truth",
@@ -331,27 +315,26 @@ def draw_main_fig(summed, predictions, annotate):
         line_color=pred_color
     ))
     
-    if annotate == 'Annotation On':
-        # https://plotly.com/python/text-and-annotations/
-        for (x, y) in zip(summed[time_column], summed[target].values):
-            fig.add_annotation(
-                x=x, y=y, xref="x",
-                yref="y", text=numerize(y, 0),
-                showarrow=True, arrowhead=1, 
-                arrowsize=2,arrowwidth=1,
-            )
-            
-        for (x, y) in zip(
-            predictions[time_column], 
-            predictions['PREDICTED_MEAN'].values
-        ):
-            fig.add_annotation(
-                x=x, y=y, xref="x",
-                yref="y", text=numerize(y, 0),
-                showarrow=True,yanchor='bottom',
-                arrowhead=1, arrowsize=2,arrowwidth=1,
-                ax=20,ay=40
-            )
+    # https://plotly.com/python/text-and-annotations/
+    for (x, y) in zip(summed[time_column], summed[target].values):
+        fig.add_annotation(
+            x=x, y=y, xref="x",
+            yref="y", text=numerize(y, 0),
+            showarrow=True, arrowhead=1, 
+            arrowsize=2,arrowwidth=1,
+        )
+        
+    for (x, y) in zip(
+        predictions[time_column], 
+        predictions['PREDICTED_MEAN'].values
+    ):
+        fig.add_annotation(
+            x=x, y=y, xref="x",
+            yref="y", text=numerize(y, 0),
+            showarrow=True,yanchor='bottom',
+            arrowhead=1, arrowsize=2,arrowwidth=1,
+            ax=20,ay=40
+        )
     
     # https://plotly.com/python/filled-area-plots/#filled-area-plot-in-dash
     fig.add_trace(

@@ -3,6 +3,12 @@ import numpy as np
 from statsmodels.tsa.arima.model import ARIMA
 from config import *
 
+def get_model(Y):
+    return ARIMA(
+        Y, order=([1, 2, 3], 2, 1),
+        enforce_stationarity=True
+    )
+
 def sanitize_constraints(constraints):
     # print('Verifying constraints...')
     data = {}
@@ -104,12 +110,14 @@ def merge(left:pd.DataFrame, right:pd.DataFrame, key=None, how='inner'):
     return merged_data
 
 def predict(summed, predictions):
+    summed = summed.sort_values(time_column)
+    
     years = summed[time_column].values
     
     for time_step in range(seq_len, len(years)):
-        Y = summed[summed[time_column]<years[time_step]][target].values
+        Y = summed.loc[time_step-seq_len:time_step, target].values
         
-        model = ARIMA(Y, order=(2, 1, 1))
+        model = get_model(Y)
         model.initialize_approximate_diffuse()
         model_fitted = model.fit() 
         
@@ -128,15 +136,18 @@ def predict(summed, predictions):
     return predictions
 
 def autoregressive(summed, predictions, pred_len):
+    summed = summed.sort_values(time_column)
     Y = list(summed[target].values)
     if len(Y) == 0:
         return predictions
-
-    for i in range(0, pred_len):
-        model = ARIMA(Y, order=(seq_len, 1, 1))
+    
+    for i in range(1, pred_len+1):
+        Y = Y[-seq_len:]
+        model = get_model(Y)
         model.initialize_approximate_diffuse()
-        model_fitted = model.fit() 
-        result = model_fitted.get_forecast()
+        model_fitted = model.fit()
+        
+        result = model_fitted.get_forecast(steps=1)
         forecast = result.predicted_mean
         forecast = np.round(np.where(forecast<=0, 0, forecast), 0)
         

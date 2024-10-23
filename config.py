@@ -37,7 +37,7 @@ alpha = 0.05
 confidence = int((1 - alpha) * 100)
 
 # configurations
-seq_len = 3
+seq_len = 5
 line_width = 5
 pred_len = 6
 marker_size = 10
@@ -55,7 +55,7 @@ background_color = "lightblue"
 uva_color = '#232d4b'
 uva_orange = '#e57200'
 uva_header = '#dadada'
-uva_font = '#232d62'
+uva_font = '#232D4B' # '#232d62'
 
 style_header = {
     'backgroundColor': uva_header,
