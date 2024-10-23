@@ -83,20 +83,27 @@ def get_bottom_navbar():
                 dbc.Row(row) for row in [
                     'Phone hours',
                     'Weekdays: 10-noon and 1-4',
-                    html.A(
-                        "X", href='https://twitter.com/UVASFS', 
-                        style={'color':'white', 'padding':'0px'}
-                    ),
-                    html.A(
-                        'Facebook', href='https://www.facebook.com/UVASFS/', 
-                        style={'color':'white', 'padding':'0px'}
-                    ), html.A(
-                        'Instagram', href='https://www.instagram.com/uvasfs/?hl=en', 
-                        style={'color':'white', 'padding':'0px'}
-                    ),
-                    # [html.Img(src='./assets/twitter-white.png', height=3, width=3), 'X'],
-                    # [html.Img(src='./assets/facebook-white.png', style={'block':'inline', 'height':'10px'}), 'Facebook'],
-                    # [html.Img(src='./assets/instagram-white.png', height="10px", width="10px"), 'Instagram']
+                    dbc.Col([
+                        html.Img(src='./assets/twitter-white.png', style={'block':'inline', 'height':'14px', 'width':'18px'}), 
+                        html.A(
+                            "X", href='https://twitter.com/UVASFS', 
+                            style={'color':'white', 'paddingLeft':'6px'}
+                        )
+                    ], style={'padding':'0px', 'margin':'3px'}),
+                    dbc.Col([
+                        html.Img(src='./assets/facebook-white.png', style={'block':'inline', 'height':'16px', 'width':'20px'}), 
+                        html.A(
+                            "Facebook", href='https://facebook.com/UVASFS', 
+                            style={'color':'white', 'paddingLeft':'6px'}
+                        )
+                    ], style={'padding':'0px', 'margin':'3px'}),
+                    dbc.Col([
+                        html.Img(src='./assets/instagram-white.png', style={'block':'inline', 'height':'20px', 'width':'20px'}), 
+                        html.A(
+                            "Instagram", href='https://instagram.com/UVASFS', 
+                            style={'color':'white', 'paddingLeft':'6px'}
+                        )
+                    ], style={'padding':'0px', 'margin':'3px'})
                 ]
             ])
             ],
