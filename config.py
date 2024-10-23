@@ -44,8 +44,8 @@ marker_size = 10
 fontsize = 12
 
 # top right bottom left
-padding = '6vw'
-page_margin = '3vw 6vw 3vw 6vw'
+padding = '7vw'
+page_margin = '3vw 7vw 3vw 7vw'
 
 # logging will be saved in data_root folder
 log_file = 'myapp.log'

@@ -107,7 +107,11 @@ def get_bottom_navbar():
                 ]
             ])
             ],
-            style={'color':'white', 'backgroundColor':uva_color, 'padding': '10px', 'fontSize':'0.86em'},
+            style={
+                'color':'white', 'backgroundColor':uva_color, 
+                'padding': '1em', 'fontSize':'0.86em',
+                'paddingTop':'2em',
+            },
         ), 
         dbc.Row(
             dbc.Col([
@@ -134,11 +138,11 @@ def get_bottom_navbar():
                 'padding': '15px', 'textAlign':'center', 'fontSize':'0.86em'
             }
         ),
-        dbc.Row(
+        dbc.Row( 
             html.A('© 2024 By the Rector and Visitors of the University of Virginia'),
             style={
                 'color':'white', 'backgroundColor':uva_color, 
-                'padding': '0px', 'textAlign':'center', 'fontSize':'0.86em'
+                'textAlign':'center', 'fontSize':'0.86em', 'paddingBottom':'2em'
             })
     ]
     
@@ -150,26 +154,17 @@ def get_layout(factors, factor_labels, summed):
         dark=True,
     )
     
-    navbar = dbc.Navbar(
-        dbc.Container(
-            [
-                html.A(
-                    # Use row and col to control vertical alignment of logo / brand
-                    dbc.Row(
-                        [
-                            dbc.Col(html.Img(src='./assets/uva-logo-inline.png', height="40px")),
-                            # dbc.Col(dbc.NavbarBrand("Navbar", className="ms-2")),
-                        ],
-                        # align="left"
-                    ),
-                    href="https://sfs.virginia.edu",
-                    style={'margin':'8px'},
-                )
-            ]
+    navbar = dbc.Row(
+        dbc.Col(
+            html.Img(
+                src='./assets/uva-logo-inline.png', 
+                style={'height':'35px'}
+            )
         ),
-        color=uva_color,
-        style={'backgroundColor':uva_color, 'align': 'left'},
-        dark=True,
+        style={
+            'color':'white', 'backgroundColor':uva_color, 
+            'padding':'1.5em', 'paddingLeft': padding
+        }
     )
     
     figures = [dbc.Col(
@@ -216,25 +211,24 @@ def get_layout(factors, factor_labels, summed):
                 )
             ), 
             dbc.Col([
-                html.A('PAY ONLINE', href='https://virginia.myonplanu.com/login', style={'color':uva_font, 'padding':'0px','textDecoration':'none'}),
+                html.A('PAY ONLINE', href='https://virginia.myonplanu.com/login', style={'color':uva_font,'textDecoration':'none', 'textAlign':'center'}),
                 html.A(' / ', style={'color': uva_orange}), 
-                html.A('SIS LOGIN', href='https://sisuva.admin.virginia.edu/ihprd/signon.html', style={'color':uva_font, 'padding':'0px','textDecoration':'none'}), 
+                html.A('SIS LOGIN', href='https://sisuva.admin.virginia.edu/ihprd/signon.html', style={'color':uva_font, 'textDecoration':'none'}), 
                 html.A(' / ', style={'color': uva_orange}), 
-                html.A('ESTIMATE COSTS', href='https://sfs.virginia.edu/estimate-your-costs-attend-uva', style={'color':uva_font, 'padding':'0px','textDecoration':'none'})
+                html.A('ESTIMATE COSTS', href='https://sfs.virginia.edu/estimate-your-costs-attend-uva', style={'color':uva_font, 'textDecoration':'none'})
                 ], style={
                     'textAlign': 'right', 
-                    'textColor':uva_font, 'marginLeft': '0px', 
+                    'textColor':uva_font, 'margin':'auto', 
                     'fontWeight':'bold',
                     'fontSize':'0.9em'
                 }
             ),
-        ], style={'margin': page_margin}),
+        ], style={'margin': page_margin, 'marginTop':'1.5em', 'marginBottom':'1.5em'}),
         dbc.Row(
             [dbc.Col(dcc.Dropdown(
                 id=f"dropdown-{column}",
                 options = values, value = values[0],
-                # clearable=True, 
-                searchable=True, 
+                clearable=False, searchable=True, 
                 style={'backgroundColor':uva_header, 'border':'0px'},
                 # persistence=True, persistence_type='local'
             )) for column, values in zip(factor_labels, factors)]
@@ -244,9 +238,8 @@ def get_layout(factors, factor_labels, summed):
             # ]
             ,
             style={
-                'padding':'5px', 'backgroundColor':uva_header, 
-                'margin':'5px', 'align':'center', 
-                'textColor':uva_font, 'fontWeight':'bold',
+                'padding':'2px', 'backgroundColor':uva_header, 
+                'align':'center', 'textColor':uva_font, 'fontWeight':'bold',
                 'padding-left': padding, 'padding-right': padding
             }
         ),

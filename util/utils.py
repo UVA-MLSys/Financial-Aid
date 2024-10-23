@@ -141,7 +141,7 @@ def autoregressive(summed, predictions, pred_len):
     if len(Y) == 0:
         return predictions
     
-    for i in range(1, pred_len+1):
+    for i in range(0, pred_len):
         Y = Y[-seq_len:]
         model = get_model(Y)
         model.initialize_approximate_diffuse()
