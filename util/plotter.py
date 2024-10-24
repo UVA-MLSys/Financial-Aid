@@ -26,7 +26,7 @@ def get_contraints_table(constraints, factors):
         else: dash_columns.append({'id':c, 'name':c, 'type': 'numeric'})
     
     constraints_table = dbc.Col([
-        html.H2("Policy Table", style={'textColor':uva_font, 'fontWeight':'bold', 'textAlign':'center'}),
+        html.H2("Policy Table", style={'fontWeight':'bold', 'textAlign':'center'}),
         dash_table.DataTable(
             id='constraint-table', columns=dash_columns,
             data=constraints.to_dict('records'), page_size=8, 
@@ -178,10 +178,10 @@ def get_layout(factors, factor_labels, summed):
             ('count-chart', 5)]
     ]
     
-    aid_table = dbc.Col([
+    aid_table = dbc.Col([ 
         html.H2(
             "Financial Aid Table", 
-            style={'textColor':uva_font, 'fontWeight':'bold', 'textAlign':'center'}
+            style={'fontWeight':'bold', 'textAlign':'center'}
         ),
         # https://dash.plotly.com/datatable/style#styling-editable-columns
         dash_table.DataTable(
@@ -205,20 +205,20 @@ def get_layout(factors, factor_labels, summed):
             dbc.Col(
                 html.H1('Student Financial Aid Prediction', 
                     style={
-                        'textAlign':'left', 'textColor':uva_font, 
+                        'textAlign':'left', 
                         'fontWeight':'bold','marginRight': '0px'
                     }
                 )
             ), 
             dbc.Col([
-                html.A('PAY ONLINE', href='https://virginia.myonplanu.com/login', style={'color':uva_font,'textDecoration':'none', 'textAlign':'center'}),
+                html.A('PAY ONLINE', href='https://virginia.myonplanu.com/login', style={'textDecoration': 'None'}),
                 html.A(' / ', style={'color': uva_orange}), 
-                html.A('SIS LOGIN', href='https://sisuva.admin.virginia.edu/ihprd/signon.html', style={'color':uva_font, 'textDecoration':'none'}), 
+                html.A('SIS LOGIN', href='https://sisuva.admin.virginia.edu/ihprd/signon.html', style={'textDecoration': 'None'}), 
                 html.A(' / ', style={'color': uva_orange}), 
-                html.A('ESTIMATE COSTS', href='https://sfs.virginia.edu/estimate-your-costs-attend-uva', style={'color':uva_font, 'textDecoration':'none'})
+                html.A('ESTIMATE COSTS', href='https://sfs.virginia.edu/estimate-your-costs-attend-uva', style={'textDecoration': 'None'})
                 ], style={
                     'textAlign': 'right', 
-                    'textColor':uva_font, 'margin':'auto', 
+                    'margin':'auto', 
                     'fontWeight':'bold',
                     'fontSize':'0.9em'
                 }
@@ -238,8 +238,8 @@ def get_layout(factors, factor_labels, summed):
             # ]
             ,
             style={
-                'padding':'2px', 'backgroundColor':uva_header, 
-                'align':'center', 'textColor':uva_font, 'fontWeight':'bold',
+                'padding':'3px', 'backgroundColor':uva_header, 
+                'align':'center', 'fontWeight':'bold',
                 'padding-left': padding, 'padding-right': padding
             }
         ),

@@ -9,3 +9,7 @@ https://community.plotly.com/t/dash-datatable-dropdown-and-bootstrap/76821/3
 .dash-table-container .dropdown {
   position: static;
 }
+
+a, h1, h2, h3, h4, h5, h6 {
+  color: #232D4B;
+}
